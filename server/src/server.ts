@@ -63,16 +63,8 @@ if (ENV.TRUST_PROXY) {
 
 app.use(helmet());
 
-// Configure CORS from ALLOWED_ORIGINS (comma separated). Defaults to allow all origins in dev.
-const allowed = (ENV.ALLOWED_ORIGINS ?? "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
-const corsOptions =
-  allowed.length === 0 || allowed.includes("*")
-    ? undefined
-    : { origin: allowed };
-app.use(cors(corsOptions));
+// Configure CORS to allow all origins
+app.use(cors());
 
 // Routes
 // Mount Arcjet middleware on /api to protect API endpoints (health remains public)

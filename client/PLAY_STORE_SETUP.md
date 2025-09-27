@@ -2,10 +2,12 @@ Play Store setup and EAS credential steps (detailed)
 
 This guide assumes you're on Windows (PowerShell) and working from the `client` folder of this repo.
 
-1) Google Play Developer account
+1. Google Play Developer account
+
 - Register at https://play.google.com/console (one-time $25 fee)
 
-2) Create a Google Cloud project & service account
+2. Create a Google Cloud project & service account
+
 - In Play Console -> Settings -> API access -> Create a Google Cloud project or link an existing one.
 - In the linked Google Cloud project: IAM & Admin -> Service Accounts -> Create Service Account.
 - Grant Service Account the role: "Service Account User" and assign the Play Console access later (see Play Console > API access).
@@ -21,10 +23,12 @@ mkdir keys
 # copy downloaded JSON into client/keys/play-service-account.json
 ```
 
-3) Configure Play Console API access
+3. Configure Play Console API access
+
 - In Play Console -> Settings -> API access -> Grant access to the service account email with the "Release Manager" role (or equivalent) so it can upload releases.
 
-4) EAS & Keystore
+4. EAS & Keystore
+
 - Install EAS CLI globally if not installed:
 
 ```powershell
@@ -52,11 +56,12 @@ eas credentials
 eas credentials -p android --upload-keystore
 ```
 
-5) Using service account with `eas submit`
+5. Using service account with `eas submit`
+
 - Ensure `client/eas.json` `submit.production.android.serviceAccountKeyPath` points to the downloaded JSON key.
 - Do not commit the key. Add to `.gitignore` (already added in this repo).
 
-6) Build & submit
+6. Build & submit
 
 ```powershell
 cd client
@@ -67,7 +72,8 @@ eas build -p android --profile production
 eas submit -p android --profile production --service-account ./keys/play-service-account.json
 ```
 
-7) Using EAS secrets (optional)
+7. Using EAS secrets (optional)
+
 - To avoid putting secrets in files, use `eas secret:create` to store API keys or other env vars.
 
 ```powershell
@@ -76,5 +82,6 @@ eas secret:create --name API_URL --value "https://..."
 ```
 
 Reference
+
 - EAS build docs: https://docs.expo.dev/build-reference/eas-json/
 - EAS submit docs: https://docs.expo.dev/submit/overview/

@@ -3,9 +3,9 @@ name: EAS Android Build & Submit
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'client/**'
+      - "client/**"
 
 jobs:
   build-and-submit:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install dependencies (client)
         working-directory: client

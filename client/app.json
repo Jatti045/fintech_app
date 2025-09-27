@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "client",
-    "slug": "client",
-    "version": "1.0.0",
-    "description": "Budgee — simple personal budget tracker",
+    "name": "Budgee",
+    "slug": "budgee-app",
+    "version": "0.0.1",
+    "description": "Budgee — budgeting made easy",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "client",
@@ -14,29 +14,25 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.budgee.app",
       "versionCode": 1,
-      "permissions": [
-        "INTERNET",
-        "ACCESS_NETWORK_STATE"
-      ]
+      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
     },
-    "privacy": "public",
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
@@ -45,6 +41,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "eb1b67c5-7f55-41e6-aa04-b91e20a6118a"
+      }
     }
   }
 }
