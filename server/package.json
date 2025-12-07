@@ -19,19 +19,17 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.3.1",
     "@types/nodemailer": "^7.0.1",
-    "prisma": "^6.16.1",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.2"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.16.1",
     "@arcjet/inspect": "^1.0.0-beta.12",
     "@arcjet/node": "^1.0.0-beta.12",
     "@clerk/express": "^1.7.30",
@@ -44,6 +42,8 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.6",
+    "prisma": "^6.16.1",
+    "typescript": "^5.9.2",
     "winston": "^3.17.0"
   }
 }
