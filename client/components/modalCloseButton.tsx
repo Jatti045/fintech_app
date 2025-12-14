@@ -15,7 +15,6 @@ function ModalCloseButton({
       style={{
         position: "absolute",
         backgroundColor: THEME.surface,
-        top: 16,
         right: 16,
         zIndex: 1000,
         elevation: 10,

@@ -114,6 +114,9 @@ function ResetPasswordModal({
       animationType="slide"
       presentationStyle="fullScreen"
     >
+      <View className="relative mb-4">
+        <ModalCloseButton setOpenSheet={confirmClose as any} />
+      </View>
       <SafeAreaView className="flex-1">
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -121,8 +124,6 @@ function ResetPasswordModal({
         >
           <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             <View className="flex-1 px-4">
-              <ModalCloseButton setOpenSheet={confirmClose as any} />
-
               <View className="mt-20 px-2">
                 <Text
                   style={{ color: THEME.textPrimary }}

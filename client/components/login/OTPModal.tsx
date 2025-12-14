@@ -108,14 +108,15 @@ function OTPModal({
           position: "relative",
         }}
       >
+        <View className="relative mb-4">
+          <ModalCloseButton setOpenSheet={confirmClose as any} />
+        </View>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1, backgroundColor: THEME.background }}
         >
           <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             <View className="flex-1 px-4">
-              <ModalCloseButton setOpenSheet={confirmClose as any} />
-
               <Text
                 style={{ color: THEME.textPrimary }}
                 className="text-xl font-bold text-center mb-6"

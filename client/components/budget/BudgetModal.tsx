@@ -81,7 +81,9 @@ function BudgetModal({
           position: "relative",
         }}
       >
-        <ModalCloseButton setOpenSheet={setOpenSheet} />
+        <View className="relative mb-4">
+          <ModalCloseButton setOpenSheet={setOpenSheet} />
+        </View>
 
         <View className="items-center justify-center relative mb-4">
           <Text

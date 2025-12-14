@@ -41,6 +41,9 @@ function InformationModal({
           position: "relative",
         }}
       >
+        <View className="relative mb-4">
+          <ModalCloseButton setOpenSheet={setHelpOpen} />
+        </View>
         <View
           style={{
             flexDirection: "row",
@@ -58,7 +61,6 @@ function InformationModal({
             Help & Usage
           </Text>
         </View>
-        <ModalCloseButton setOpenSheet={setHelpOpen} />
 
         <View
           style={{ marginTop: 12, flex: 1 }}

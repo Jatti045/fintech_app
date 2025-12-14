@@ -138,6 +138,10 @@ function TransactionModal({
           position: "relative",
         }}
       >
+        {/* Close button */}
+        <View className="relative">
+          <ModalCloseButton setOpenSheet={setOpenSheet} />
+        </View>
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -402,9 +406,6 @@ function TransactionModal({
             </View>
           </KeyboardAvoidingView>
         </ScrollView>
-
-        {/* Close button */}
-        <ModalCloseButton setOpenSheet={setOpenSheet} />
       </SafeAreaView>
     </Modal>
   );
