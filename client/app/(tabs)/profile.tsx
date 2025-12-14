@@ -537,7 +537,9 @@ export default function ProfileScreen() {
             }}
           >
             {/* close button (top-right) will clear inputs via closeChangeModal */}
-            <ModalCloseButton setOpenSheet={closeChangeModal} />
+            <View className="relative mb-4">
+              <ModalCloseButton setOpenSheet={closeChangeModal} />
+            </View>
 
             <View style={{ alignItems: "center", marginTop: 12 }}>
               <Text
