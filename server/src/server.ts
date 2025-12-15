@@ -131,3 +131,5 @@ process.on("unhandledRejection", (reason) => {
   // attempt a graceful shutdown
   shutdown("unhandledRejection")();
 });
+
+module.exports = app;
