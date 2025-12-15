@@ -8,13 +8,11 @@ export function createArcjetMiddleware() {
   // value (including undefined) will be treated as OFF to avoid crashing
   // when an invalid mode is supplied in the environment.
   let MODE = ((ENV.ARCJET_MODE as string) || "OFF").toUpperCase(); // LIVE | DRY_RUN | OFF
-  
+
   // If Arcjet is not configured or disabled, return a no-op middleware
   if (!ENV.ARCJET_KEY || MODE === "OFF") {
     if (!ENV.ARCJET_KEY) {
-      logger.info(
-        "Arcjet key not provided - Arcjet middleware disabled."
-      );
+      logger.info("Arcjet key not provided - Arcjet middleware disabled.");
     } else {
       logger.info("Arcjet disabled via ARCJET_MODE=OFF");
     }
@@ -26,7 +24,7 @@ export function createArcjetMiddleware() {
   logger.warn(
     "Arcjet is enabled but requires ESM. Consider setting ARCJET_MODE=OFF for Vercel deployment."
   );
-  
+
   // Return no-op middleware to prevent ESM/CommonJS errors on Vercel
   return (_req: any, _res: any, next: any) => next();
 }
