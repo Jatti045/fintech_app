@@ -33,7 +33,7 @@ export const getTransactions = asyncHandler(
 
       // Validate pagination parameters
       const pageNum = Math.max(1, Number(page) || 1);
-      const limitNum = Math.min(20, Math.max(1, Number(limit) || 10)); // Max 20 items per page
+      const limitNum = Math.min(10, Math.max(1, Number(limit) || 10)); // Max 10 items per page
 
       // Validate transaction type if provided
       if (type && !["INCOME", "EXPENSE"].includes(type as string)) {
@@ -66,19 +66,12 @@ export const getTransactions = asyncHandler(
       }
 
       // Support filtering by currentMonth/currentYear
-
-      console.log(
-        "Received currentMonth and currentYear:",
-        currentMonth,
-        currentYear
-      );
-
       where.date = {
         gte: new Date(Number(currentYear), Number(currentMonth), 1),
         lt: new Date(Number(currentYear), Number(currentMonth) + 1, 1),
       };
 
-      if (startDate || endDate) {
+      /* if (startDate || endDate) {
         where.date = {};
 
         if (startDate) {
@@ -114,7 +107,7 @@ export const getTransactions = asyncHandler(
             });
           }
         }
-      }
+      } */
 
       if (searchQuery && searchQuery !== "") {
         where.OR = [

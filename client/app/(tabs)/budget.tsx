@@ -46,7 +46,10 @@ export default function Goals() {
   const handleCreateBudget = async () => {
     // validation
     if (!category.trim() || !limit.trim() || !icon.trim()) {
-      showAlert({ title: "Please enter category, icon, and limit" });
+      showAlert({
+        title: "Missing Information",
+        message: "Please enter category, icon, and limit",
+      });
       return;
     }
 
@@ -54,7 +57,10 @@ export default function Goals() {
 
     const parsedLimit = Number(limit);
     if (isNaN(parsedLimit) || parsedLimit <= 0) {
-      showAlert({ title: "Please enter a valid numeric limit" });
+      showAlert({
+        title: "Invalid Amount",
+        message: "Please enter a valid numeric limit",
+      });
       return;
     }
     const currentMonth = calendar.month;
@@ -199,21 +205,27 @@ export default function Goals() {
                   message: string;
                 };
                 if (success) {
-                  showAlert({
-                    title: "Success",
-                    message: "Budget deleted successfully",
-                  });
+                  setTimeout(() => {
+                    showAlert({
+                      title: "Success",
+                      message: "Budget deleted successfully",
+                    });
+                  }, 400);
                   return;
                 }
-                showAlert({
-                  title: "Error",
-                  message: message || "Failed to delete budget",
-                });
+                setTimeout(() => {
+                  showAlert({
+                    title: "Error",
+                    message: message || "Failed to delete budget",
+                  });
+                }, 400);
               } catch (err: any) {
-                showAlert({
-                  title: "Error",
-                  message: err.message || "Failed to delete budget",
-                });
+                setTimeout(() => {
+                  showAlert({
+                    title: "Error",
+                    message: err.message || "Failed to delete budget",
+                  });
+                }, 400);
               }
             },
           },
@@ -224,7 +236,7 @@ export default function Goals() {
 
   return (
     <SafeAreaView
-      edges={["top", "left", "right"]}
+      edges={["left", "right"]}
       className="flex-1"
       style={{ backgroundColor: THEME.background }}
     >

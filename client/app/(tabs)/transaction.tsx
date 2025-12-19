@@ -387,7 +387,7 @@ export default function Index() {
 
   return (
     <SafeAreaView
-      edges={["top", "left", "right"]}
+      edges={["left", "right"]}
       style={{ backgroundColor: THEME.background, flex: 1 }}
       className="px-4"
     >

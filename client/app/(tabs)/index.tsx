@@ -228,7 +228,7 @@ export default function Index() {
 
   return (
     <SafeAreaView
-      edges={["top", "left", "right"]}
+      edges={["left", "right"]}
       style={{ flex: 1, backgroundColor: THEME.background }}
     >
       <ScrollView

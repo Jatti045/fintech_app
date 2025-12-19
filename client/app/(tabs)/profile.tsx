@@ -236,7 +236,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView
-      edges={["top", "left", "right"]}
+      edges={["left", "right"]}
       style={{ backgroundColor: THEME.background }}
       className="flex-1"
     >

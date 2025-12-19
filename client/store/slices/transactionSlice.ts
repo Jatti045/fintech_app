@@ -83,7 +83,7 @@ const initialState: TransactionState = {
 };
 
 export const fetchTransaction = createAsyncThunk(
-  "transactions/fetchAll",
+  "transactions/fetch",
   async (
     {
       searchQuery = "",
@@ -107,7 +107,7 @@ export const fetchTransaction = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // Disable cache when using pagination to ensure accurate pagination data
+      // Disable cache when using pagination beyond first page
       if (page > 1 || !useCache) {
         const response = await transactionAPI.fetchAll({
           searchQuery,

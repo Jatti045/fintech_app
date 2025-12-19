@@ -254,7 +254,8 @@ function BudgetModal({
                   // basic validation
                   if (!category.trim() || !icon || !limit.trim()) {
                     showAlert({
-                      title: "Please enter category, icon, and limit",
+                      title: "Missing Information",
+                      message: "Please enter category, icon, and limit",
                     });
                     return;
                   }
@@ -263,7 +264,8 @@ function BudgetModal({
                   const parsedLimit = Number(limit);
                   if (isNaN(parsedLimit) || parsedLimit < 0) {
                     showAlert({
-                      title: "Please enter a valid numeric limit",
+                      title: "Invalid Amount",
+                      message: "Please enter a valid numeric limit",
                     });
                     return;
                   }

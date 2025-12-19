@@ -1,10 +1,9 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import "@/global.css";
-import { store, loadUserFromStorage } from "../../store";
+import { store } from "../../store";
 import { useEffect } from "react";
 import { useAppDispatch, useCalendar, useTheme } from "@/hooks/useRedux";
-import { loadThemeFromStorage } from "@/store/slices/themeSlice";
 import { fetchTransaction } from "@/store/slices/transactionSlice";
 import { fetchBudgets } from "@/store/slices/budgetSlice";
 
@@ -34,7 +33,12 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        headerTitle: () => null,
+        headerStyle: {
+          backgroundColor: THEME.border,
+          height: 80,
+        },
         tabBarStyle: {
           backgroundColor: THEME.inputBackground,
           borderTopColor: THEME.border,
