@@ -65,6 +65,17 @@ export const useBudgetStatus = () => {
   }));
 };
 
+export const useGoals = () => {
+  return useAppSelector((state) => state.goal.goals);
+};
+
+export const useGoalStatus = () => {
+  return useAppSelector((state) => ({
+    isLoading: state.goal.loading,
+    error: state.goal.error,
+  }));
+};
+
 export const useCalendar = () => {
   return useAppSelector((state) => ({
     month: state.calendar.month,

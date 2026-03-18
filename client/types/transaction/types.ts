@@ -13,6 +13,11 @@ export interface ITransaction {
   year: number;
   category: string;
   amount: number;
+  baseCurrency?: string | null;
+  originalAmount?: number | null;
+  originalCurrency?: string | null;
+  displayAmount?: number;
+  displayCurrency?: string;
   date: string;
   type: TransactionType;
   icon?: string;
@@ -83,6 +88,10 @@ export interface TransactionState {
   };
   monthSummary: {
     totalAmount: number;
+    monthlyIncome?: number;
+    netSpent?: number;
+    netRemaining?: number;
+    spentPercentageOfIncome?: number;
   };
   isLoadingMore: boolean;
 }
@@ -92,6 +101,11 @@ export interface TransactionItem {
   id: string;
   name: string;
   amount: number | string;
+  baseCurrency?: string | null;
+  originalAmount?: number | null;
+  originalCurrency?: string | null;
+  displayAmount?: number;
+  displayCurrency?: string;
   date: string;
   category: string;
   budgetId?: string;

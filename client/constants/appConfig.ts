@@ -12,10 +12,10 @@ export const OTP_LENGTH = 6;
 
 // ── Transactions ─────────────────────────────────────────────────────────────
 export const MAX_TRANSACTION_AMOUNT = 1_000_000;
-export const PAGINATION_LIMIT = 10;
+export const PAGINATION_LIMIT = 20;
 
 // ── Budgets ──────────────────────────────────────────────────────────────────
-export const BUDGET_PRESET_AMOUNTS = [25, 50, 100, 200, 500] as const;
+export const BUDGET_PRESET_AMOUNTS = [25, 50, 100, 200, 500];
 
 // ── Networking ───────────────────────────────────────────────────────────────
 export const API_TIMEOUT_MS = 60_000;

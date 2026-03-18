@@ -11,10 +11,10 @@ type Props = {
 };
 
 /**
- * Reusable search bar used on both the Transaction and Budget screens.
+ * Reusable search bar used on the Transaction, Budget, and Goals screens.
  *
- * Previously two near-identical copies (`TxSearchBar` and `BudgetSearchBar`)
- * existed — this shared component eliminates that duplication.
+ * Previously near-identical wrapper components existed.
+ * This shared component keeps search UI/behavior in one place.
  */
 export default function SearchBar({
   searchQuery,

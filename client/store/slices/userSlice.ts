@@ -7,6 +7,7 @@ import type {
   IUser,
   UserState,
 } from "@/types/user/types";
+import { logger } from "@/utils/logger";
 
 export type { UserState };
 
@@ -159,6 +160,20 @@ export const updateUserCurrency = createAsyncThunk(
     } catch (error: unknown) {
       return rejectWithValue(
         extractErrorMessage(error, "Failed to update currency"),
+      );
+    }
+  },
+);
+
+export const updateUserMonthlyIncome = createAsyncThunk(
+  "user/updateMonthlyIncome",
+  async (monthlyIncome: number, { rejectWithValue }) => {
+    try {
+      const response = await userAPI.updateMonthlyIncome(monthlyIncome);
+      return response.data;
+    } catch (error: unknown) {
+      return rejectWithValue(
+        extractErrorMessage(error, "Failed to update monthly income"),
       );
     }
   },
@@ -334,7 +349,7 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(uploadProfilePicture.fulfilled, (state, action) => {
-        console.log("action.payload:", action.payload);
+        logger.debug("userSlice", "Profile picture uploaded", action.payload);
         state.isLoading = false;
         state.user = {
           ...state.user,
@@ -390,6 +405,24 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(updateUserCurrency.rejected, (state, action) => {
+        state.error = action.payload as string;
+      });
+
+    // updateUserMonthlyIncome cases
+    builder
+      .addCase(updateUserMonthlyIncome.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateUserMonthlyIncome.fulfilled, (state, action) => {
+        if (state.user && action.payload) {
+          state.user = {
+            ...state.user,
+            monthlyIncome: Number((action.payload as any).monthlyIncome ?? 0),
+          };
+        }
+        state.error = null;
+      })
+      .addCase(updateUserMonthlyIncome.rejected, (state, action) => {
         state.error = action.payload as string;
       });
 

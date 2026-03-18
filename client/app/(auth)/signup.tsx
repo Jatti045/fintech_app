@@ -21,10 +21,10 @@ import {
   clearSignupError,
   signupUser,
   useAppDispatch,
-  useAuth,
   useAuthStatus,
 } from "@/store";
 import Loader from "@/utils/loader";
+import { logger } from "@/utils/logger";
 
 const { width, height } = Dimensions.get("window");
 const isSmallScreen = width < 380;
@@ -61,7 +61,7 @@ const SignUpScreen = () => {
 
       // Dispatch signup action
       const normalizedEmail = email.trim().toLowerCase();
-      const response = await dispatch(
+      await dispatch(
         signupUser({
           username,
           email: normalizedEmail,
@@ -69,9 +69,6 @@ const SignUpScreen = () => {
           confirmPassword,
         }),
       ).unwrap();
-
-      // Debugging log
-      console.log("Signup response:", response);
 
       showAlert({
         title: "Signup Successful",
@@ -81,7 +78,7 @@ const SignUpScreen = () => {
       // Navigate to login on successful signup
       router.replace("/(auth)/login");
     } catch (error) {
-      console.error("Signup error:", error);
+      logger.warn("SignUpScreen", "Signup failed", error);
       // Error is already handled by Redux state, no need to set local error
       showAlert({
         title: "Signup Failed",
@@ -255,6 +252,10 @@ const SignUpScreen = () => {
                       autoComplete="new-password"
                     />
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       onPress={() => setShowPassword(!showPassword)}
                       style={{
                         position: "absolute",
@@ -305,6 +306,12 @@ const SignUpScreen = () => {
                       autoComplete="new-password"
                     />
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        showConfirmPassword
+                          ? "Hide confirm password"
+                          : "Show confirm password"
+                      }
                       onPress={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }

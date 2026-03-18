@@ -15,7 +15,7 @@ import { useAppDispatch, useCalendar } from "../useRedux";
 import { useTransactionForm } from "./useTransactionForm";
 import { convertCurrency } from "@/utils/currencyConverter";
 import { getCurrencySymbol } from "@/constants/Currencies";
-import { hapticSuccess, hapticHeavy, hapticError } from "@/utils/haptics";
+import { hapticSuccess, hapticHeavy } from "@/utils/haptics";
 
 /**
  * Combined hook that owns form state and exposes both create and update handlers.
@@ -69,14 +69,13 @@ export const useTransactionOperations = () => {
 
       // Convert amount if the transaction currency differs from the user's default
       let finalAmount = amt;
-      let originalCurrency: string | null = null;
-      let originalAmount: number | null = null;
+      const originalCurrency = txCurrency;
+      const originalAmount = amt;
+      const baseCurrency = userCurrency;
 
       if (txCurrency !== userCurrency) {
         try {
           finalAmount = await convertCurrency(amt, txCurrency, userCurrency);
-          originalCurrency = txCurrency;
-          originalAmount = amt;
         } catch (err: any) {
           showAlert({
             title: "Conversion Error",
@@ -98,6 +97,7 @@ export const useTransactionOperations = () => {
         amount: finalAmount,
         icon: null,
         budgetId: txSelectedCategoryAndId.id || null,
+        baseCurrency,
         originalCurrency,
         originalAmount,
       };
@@ -110,7 +110,6 @@ export const useTransactionOperations = () => {
         const { success, message } = response.payload ?? {};
         if (success) {
           hapticSuccess();
-          showAlert({ title: "Success", message: "Transaction created" });
           // Reset form only on success
           setTxName("");
           setTxAmount("");
@@ -166,21 +165,22 @@ export const useTransactionOperations = () => {
       if (!editingTransaction) return;
 
       // Detect no-op: skip API call if nothing has changed
-      const currencyChanged = txCurrency !== userCurrency;
-      const wasCurrencyTransaction = !!editingTransaction.originalCurrency;
-      const sameCurrencyState =
-        currencyChanged === wasCurrencyTransaction &&
-        (!currencyChanged ||
-          txCurrency === editingTransaction.originalCurrency);
+      const existingOriginalCurrency =
+        editingTransaction.originalCurrency ||
+        editingTransaction.baseCurrency ||
+        userCurrency;
+      const existingOriginalAmount = Number(
+        editingTransaction.originalAmount ?? editingTransaction.amount,
+      );
 
       const noChange =
         editingTransaction.name === txName.trim() &&
-        Number(editingTransaction.amount) === Number(txAmount) &&
+        existingOriginalAmount === Number(txAmount) &&
         (editingTransaction.budgetId || "") ===
           (txSelectedCategoryAndId.id || "") &&
         new Date(editingTransaction.date).toISOString() ===
           txDate.toISOString() &&
-        sameCurrencyState;
+        existingOriginalCurrency === txCurrency;
 
       if (noChange) {
         showAlert({
@@ -192,8 +192,9 @@ export const useTransactionOperations = () => {
 
       // Handle currency conversion if the transaction currency differs from user default
       let finalAmount = Number(txAmount);
-      let originalCurrency: string | null = null;
-      let originalAmount: number | null = null;
+      const originalCurrency = txCurrency;
+      const originalAmount = Number(txAmount);
+      const baseCurrency = userCurrency;
 
       if (txCurrency !== userCurrency) {
         try {
@@ -202,8 +203,6 @@ export const useTransactionOperations = () => {
             txCurrency,
             userCurrency,
           );
-          originalCurrency = txCurrency;
-          originalAmount = Number(txAmount);
         } catch (err: any) {
           showAlert({
             title: "Conversion Error",
@@ -231,11 +230,22 @@ export const useTransactionOperations = () => {
       )
         updates.date = txDate.toISOString();
 
-      // Always send currency fields when they've changed
-      if (!sameCurrencyState) {
+      const currencySnapshotChanged =
+        (editingTransaction.originalCurrency ||
+          editingTransaction.baseCurrency) !== originalCurrency ||
+        Number(
+          editingTransaction.originalAmount ?? editingTransaction.amount,
+        ) !== originalAmount ||
+        (editingTransaction.baseCurrency || userCurrency) !== baseCurrency;
+
+      // Always send currency snapshot when amount/currency changed.
+      if (
+        requestHasNumericChange(editingTransaction.amount, finalAmount) ||
+        currencySnapshotChanged
+      ) {
+        updates.baseCurrency = baseCurrency;
         updates.originalCurrency = originalCurrency;
         updates.originalAmount = originalAmount;
-        // Also update amount with the converted value
         updates.amount = finalAmount;
       }
 
@@ -249,10 +259,6 @@ export const useTransactionOperations = () => {
         const { success, message } = response.payload ?? {};
         if (success) {
           hapticSuccess();
-          showAlert({
-            title: "Updated",
-            message: "Transaction updated successfully",
-          });
           dispatch(
             fetchTransaction({
               searchQuery: "",
@@ -317,10 +323,6 @@ export const useTransactionOperations = () => {
                 setTimeout(() => {
                   if (success) {
                     hapticSuccess();
-                    showAlert({
-                      title: "Deleted",
-                      message: "Transaction deleted successfully.",
-                    });
                   } else {
                     showAlert({
                       title: "Error",
@@ -352,3 +354,7 @@ export const useTransactionOperations = () => {
     handleDeleteTransaction,
   };
 };
+
+function requestHasNumericChange(oldValue: any, newValue: number): boolean {
+  return Number(oldValue) !== Number(newValue);
+}

@@ -68,7 +68,6 @@ export const useBudgetOperations = () => {
           return;
         }
         hapticSuccess();
-        showAlert({ title: "Success", message: "Budget created successfully" });
         // Reset form only on success, preserving input on error for correction
         setBudgetCategory("");
         setBudgetIcon("");
@@ -142,10 +141,6 @@ export const useBudgetOperations = () => {
         const { success, message } = response.payload ?? {};
         if (success) {
           hapticSuccess();
-          showAlert({
-            title: "Success",
-            message: "Budget updated successfully",
-          });
           setOpenSheet(false);
           return;
         }
@@ -206,10 +201,6 @@ export const useBudgetOperations = () => {
                 setTimeout(() => {
                   if (success) {
                     hapticSuccess();
-                    showAlert({
-                      title: "Success",
-                      message: "Budget deleted successfully",
-                    });
                   } else {
                     showAlert({
                       title: "Error",

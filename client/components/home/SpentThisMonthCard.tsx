@@ -5,12 +5,17 @@ import { useUser } from "@/store";
 import { useTheme } from "@/hooks/useRedux";
 
 type Props = {
+  /* Card title */
+  title?: string;
   /* Total amount spent in the selected month */
   total: number;
 };
 
 /* Hero card showing total expenditure for the currently selected month. */
-export default function SpentThisMonthCard({ total }: Props) {
+export default function SpentThisMonthCard({
+  title = "Spent This Month",
+  total,
+}: Props) {
   const { THEME } = useTheme();
   const user = useUser();
   const currency = user?.currency || "USD";
@@ -26,7 +31,7 @@ export default function SpentThisMonthCard({ total }: Props) {
       }}
     >
       <Text style={{ color: THEME.textSecondary, marginBottom: 8 }}>
-        Spent This Month
+        {title}
       </Text>
       <Text
         style={{

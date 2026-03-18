@@ -14,6 +14,7 @@ import {
   deleteProfilePicture,
   changePassword,
   updateUserCurrency,
+  updateUserMonthlyIncome,
   loadUserFromStorage,
 } from "@/store/slices/userSlice";
 import { setTheme } from "@/store/slices/themeSlice";
@@ -54,6 +55,12 @@ export interface UseProfileReturn {
   setCurrencyPickerOpen: (open: boolean) => void;
   handleCurrencySelect: (code: string) => void;
 
+  /** Monthly income input + save */
+  monthlyIncomeInput: string;
+  setMonthlyIncomeInput: (value: string) => void;
+  handleSaveMonthlyIncome: () => Promise<void>;
+  monthlyIncomeSaving: boolean;
+
   /** Change-password modal state & handler */
   changeOpen: boolean;
   closeChangeModal: () => void;
@@ -84,6 +91,14 @@ export function useProfile(): UseProfileReturn {
   const [changeOpen, setChangeOpen] = useState(false);
   const [currencyPickerOpen, setCurrencyPickerOpen] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
+  const [monthlyIncomeSaving, setMonthlyIncomeSaving] = useState(false);
+  const [monthlyIncomeInput, setMonthlyIncomeInput] = useState(
+    String(user?.monthlyIncome ?? ""),
+  );
+
+  useEffect(() => {
+    setMonthlyIncomeInput(String(user?.monthlyIncome ?? ""));
+  }, [user?.monthlyIncome]);
 
   // ── show Redux-level errors as alerts ────────────────────────────────────
   useEffect(() => {
@@ -225,6 +240,41 @@ export function useProfile(): UseProfileReturn {
     },
     [dispatch, user?.currency, showAlert],
   );
+
+  const handleSaveMonthlyIncome = useCallback(async () => {
+    const parsed = Number(monthlyIncomeInput);
+    if (isNaN(parsed) || parsed < 0) {
+      showAlert({
+        title: "Invalid monthly income",
+        message: "Please enter a non-negative number.",
+      });
+      return;
+    }
+
+    setMonthlyIncomeSaving(true);
+    try {
+      const result = await dispatch(updateUserMonthlyIncome(parsed));
+      if (updateUserMonthlyIncome.fulfilled.match(result)) {
+        showAlert({
+          title: "Monthly income updated",
+          message: `Your monthly income is now ${parsed.toFixed(2)} ${user?.currency || DEFAULT_CURRENCY}.`,
+        });
+      } else {
+        showAlert({
+          title: "Error",
+          message:
+            (result.payload as string) || "Failed to update monthly income",
+        });
+      }
+    } catch (e: any) {
+      showAlert({
+        title: "Error",
+        message: e?.message || "Failed to update monthly income",
+      });
+    } finally {
+      setMonthlyIncomeSaving(false);
+    }
+  }, [dispatch, monthlyIncomeInput, showAlert, user?.currency]);
 
   // ── change password ──────────────────────────────────────────────────────
   const openChangeModal = useCallback(() => setChangeOpen(true), []);
@@ -372,6 +422,10 @@ export function useProfile(): UseProfileReturn {
     currencyPickerOpen,
     setCurrencyPickerOpen,
     handleCurrencySelect,
+    monthlyIncomeInput,
+    setMonthlyIncomeInput,
+    handleSaveMonthlyIncome,
+    monthlyIncomeSaving,
     changeOpen,
     closeChangeModal,
     openChangeModal,

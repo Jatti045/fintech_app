@@ -1,5 +1,6 @@
 import apiClient from "../config/apiClient";
 import { AxiosRequestConfig } from "axios";
+import { logger } from "@/utils/logger";
 
 export type { IApiResponse } from "@/types/api/types";
 import type { IApiResponse } from "@/types/api/types";
@@ -16,7 +17,11 @@ export default class BaseAPI {
       });
       return response.data;
     } catch (error: any) {
-      console.error(`API Error [${endpoint}]:`, error.message);
+      logger.error(
+        "BaseAPI",
+        `Request failed for endpoint: ${endpoint}`,
+        error,
+      );
 
       // Handle axios error structure
       if (error.response) {

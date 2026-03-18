@@ -1,3 +1,4 @@
+import { PAGINATION_LIMIT } from "@/constants/appConfig";
 import BaseAPI from "./base";
 import {
   TransactionType,
@@ -24,7 +25,7 @@ class TransactionAPI extends BaseAPI {
     endDate,
     budgetId,
     page = 1,
-    limit = 10,
+    limit = PAGINATION_LIMIT,
   }: {
     searchQuery: string;
     currentMonth: number;
@@ -61,7 +62,7 @@ class TransactionAPI extends BaseAPI {
     updates: Partial<ITransaction>,
   ): Promise<ITransactionResponse<ITransaction>> {
     return this.makeRequest(`/transaction/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       data: updates,
     });
   }

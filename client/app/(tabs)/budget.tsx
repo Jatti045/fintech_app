@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
+import { useRefresh } from "@/hooks/useRefresh";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,7 +19,7 @@ import {
 import { useBudgetOperations } from "@/hooks/budget/useBudgetOperation";
 import type { IBudget } from "@/types/budget/types";
 import { BudgetSkeleton } from "@/components/skeleton/SkeletonLoader";
-import BudgetSearchBar from "@/components/budget/BudgetSearchBar";
+import SearchBar from "@/components/global/SearchBar";
 
 // ─── Main Screen Component ──────────────────────────────────────────────────
 
@@ -34,28 +35,24 @@ export default function BudgetScreen() {
   // create + update are fully managed inside BudgetModal.
   const { handleDeleteBudget } = useBudgetOperations();
 
-  /** Show skeleton while initial data is loading (budgets empty + loading) */
-  const isInitialLoading = isLoading && budgets.length === 0;
-
   // ── Screen-level state ────────────────────────────────────────────────
   const [openSheet, setOpenSheet] = useState(false);
   const [editingBudget, setEditingBudget] = useState<IBudget | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const isSearching = searchQuery.trim().length > 0;
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await dispatch(
-        fetchBudgets({
-          currentMonth: calendar.month,
-          currentYear: calendar.year,
-        }),
-      );
-    } finally {
-      setRefreshing(false);
-    }
-  }, [dispatch, calendar.month, calendar.year]);
+  /** Show skeleton only for true initial load, not while searching. */
+  const isInitialLoading = isLoading && budgets.length === 0 && !isSearching;
+
+  // Use generic refresh hook
+  const { refreshing, onRefresh } = useRefresh(() =>
+    dispatch(
+      fetchBudgets({
+        currentMonth: calendar.month,
+        currentYear: calendar.year,
+      }),
+    ),
+  );
 
   // ── Stable callbacks ──────────────────────────────────────────────────
 
@@ -106,70 +103,74 @@ export default function BudgetScreen() {
       className="flex-1"
       style={{ backgroundColor: THEME.background }}
     >
+      <View className="px-4" style={{ paddingTop: 18 }}>
+        {/* Header */}
+        <View style={{ marginBottom: 12 }}>
+          <Text
+            className="text-2xl text-center font-bold mb-2"
+            style={{ color: THEME.textPrimary }}
+          >
+            Budgets
+          </Text>
+        </View>
+
+        {/* Search / filter bar */}
+        {hasBudgets && (
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            placeholder="Search budgets..."
+          />
+        )}
+      </View>
+
       <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16 }}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={isSearching ? false : refreshing}
             onRefresh={onRefresh}
             progressBackgroundColor={THEME.background}
             colors={[THEME.primary]}
           />
         }
       >
-        <View className="flex-1 px-4" style={{ paddingTop: 18 }}>
-          {/* Header */}
-          <View style={{ marginBottom: 12 }}>
-            <Text
-              className="text-2xl text-center font-bold mb-2"
-              style={{ color: THEME.textPrimary }}
-            >
-              Budgets
-            </Text>
-          </View>
-
-          {/* Search / filter bar */}
-          {hasBudgets && (
-            <BudgetSearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-            />
-          )}
-
-          {/* Budget cards or empty state */}
-          {hasBudgets ? (
-            filteredBudgets.length > 0 ? (
-              filteredBudgets.map((budget) => (
-                <BudgetCard
-                  key={budget.id}
-                  budget={budget}
-                  onEdit={handleEditPress}
-                  onDelete={handleDeleteBudget}
-                  surface={THEME.surface}
-                  border={THEME.border}
-                  background={THEME.background}
-                  primary={THEME.primary}
-                  secondary={THEME.secondary}
-                  textPrimary={THEME.textPrimary}
-                  textSecondary={THEME.textSecondary}
-                  danger={THEME.danger}
-                />
-              ))
-            ) : (
-              <View className="py-12 items-center">
-                <Text style={{ color: THEME.textSecondary }}>
-                  No budgets match "{searchQuery}"
-                </Text>
-              </View>
-            )
+        {/* Budget cards or empty state */}
+        {hasBudgets ? (
+          filteredBudgets.length > 0 ? (
+            filteredBudgets.map((budget) => (
+              <BudgetCard
+                key={budget.id}
+                budget={budget}
+                onEdit={handleEditPress}
+                onDelete={handleDeleteBudget}
+                surface={THEME.surface}
+                border={THEME.border}
+                background={THEME.background}
+                primary={THEME.primary}
+                secondary={THEME.secondary}
+                textPrimary={THEME.textPrimary}
+                textSecondary={THEME.textSecondary}
+                danger={THEME.danger}
+              />
+            ))
           ) : (
-            <EmptyBudgetState
-              primary={THEME.primary}
-              secondary={THEME.secondary}
-              textPrimary={THEME.textPrimary}
-              textSecondary={THEME.textSecondary}
-            />
-          )}
-        </View>
+            <View className="py-12 items-center">
+              <Text style={{ color: THEME.textSecondary }}>
+                No budgets match "{searchQuery}"
+              </Text>
+            </View>
+          )
+        ) : (
+          <EmptyBudgetState
+            primary={THEME.primary}
+            secondary={THEME.secondary}
+            textPrimary={THEME.textPrimary}
+            textSecondary={THEME.textSecondary}
+          />
+        )}
       </ScrollView>
 
       {/* Floating action button */}

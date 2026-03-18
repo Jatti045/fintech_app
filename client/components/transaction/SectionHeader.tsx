@@ -11,9 +11,11 @@ import { friendlyDayLabel } from "../../utils/transaction/helpers";
 const SectionHeader = React.memo(function SectionHeader({
   title,
   total,
+  currencyCode,
 }: {
   title: string;
   total: number;
+  currencyCode?: string;
 }) {
   const { THEME } = useTheme();
 
@@ -31,7 +33,7 @@ const SectionHeader = React.memo(function SectionHeader({
         numberOfLines={1}
         ellipsizeMode="tail"
       >
-        {formatCurrency(total)}
+        {formatCurrency(total, currencyCode)}
       </Text>
     </View>
   );

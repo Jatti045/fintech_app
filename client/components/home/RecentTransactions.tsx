@@ -22,8 +22,6 @@ export default function RecentTransactions({ transactions }: Props) {
           fontSize: 16,
           fontWeight: "800",
           marginBottom: 8,
-          borderColor: THEME.border,
-          borderWidth: 1,
         }}
       >
         Recent Transactions

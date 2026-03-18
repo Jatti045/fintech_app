@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, ScrollView, RefreshControl } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useProfile } from "@/hooks/profile/useProfile";
@@ -31,6 +38,10 @@ export default function ProfileScreen() {
     currencyPickerOpen,
     setCurrencyPickerOpen,
     handleCurrencySelect,
+    monthlyIncomeInput,
+    setMonthlyIncomeInput,
+    handleSaveMonthlyIncome,
+    monthlyIncomeSaving,
     changeOpen,
     closeChangeModal,
     handleChangePassword,
@@ -87,6 +98,52 @@ export default function ProfileScreen() {
             userCurrency={user?.currency || DEFAULT_CURRENCY}
             onPress={() => setCurrencyPickerOpen(true)}
           />
+
+          <View
+            style={{
+              backgroundColor: THEME.inputBackground,
+              borderColor: THEME.border,
+            }}
+            className="rounded-2xl p-4 border mb-4"
+          >
+            <Text
+              style={{ color: THEME.textPrimary }}
+              className="text-base font-semibold mb-2"
+            >
+              Monthly Income
+            </Text>
+            <Text style={{ color: THEME.textSecondary }} className="mb-3">
+              Set your monthly income to see net spending when creating
+              transactions.
+            </Text>
+            <TextInput
+              value={monthlyIncomeInput}
+              onChangeText={setMonthlyIncomeInput}
+              keyboardType="decimal-pad"
+              placeholder="0.00"
+              placeholderTextColor={THEME.placeholderText}
+              style={{
+                backgroundColor: THEME.background,
+                borderColor: THEME.border,
+                color: THEME.textPrimary,
+              }}
+              className="border rounded-lg px-3 py-3 mb-3"
+            />
+            <TouchableOpacity
+              onPress={handleSaveMonthlyIncome}
+              disabled={monthlyIncomeSaving}
+              style={{
+                backgroundColor: monthlyIncomeSaving
+                  ? THEME.border
+                  : THEME.primary,
+              }}
+              className="rounded-lg py-3 items-center"
+            >
+              <Text style={{ color: "white", fontWeight: "600" }}>
+                {monthlyIncomeSaving ? "Saving..." : "Save Monthly Income"}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <SettingsList THEME={THEME} items={settingsItems} />
         </View>

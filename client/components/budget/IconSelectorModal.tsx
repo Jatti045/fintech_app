@@ -65,6 +65,24 @@ const IconSelectorModal = ({
           position: "relative",
         }}
       >
+        <View className="mb-3 flex-row items-center justify-between">
+          <Text
+            className="text-base font-semibold"
+            style={{ color: THEME.textPrimary }}
+          >
+            Select Icon
+          </Text>
+          <TouchableOpacity
+            onPress={() => setOpenIconSelector(false)}
+            className="rounded-full p-2"
+            style={{ backgroundColor: THEME.surface }}
+            accessibilityRole="button"
+            accessibilityLabel="Close icon selector"
+          >
+            <Feather name="x" size={20} color={THEME.textPrimary} />
+          </TouchableOpacity>
+        </View>
+
         <View className="mb-4 flex-row items-center justify-between">
           <TextInput
             ref={searchInputRef}

@@ -4,6 +4,7 @@ import transactionReducer from "./slices/transactionSlice";
 import themeReducer from "./slices/themeSlice";
 import budgetReducer from "./slices/budgetSlice";
 import calendarReducer from "./slices/calendarSlice";
+import goalReducer from "./slices/goalSlice";
 
 // Configure the store
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
     user: userReducer,
     transaction: transactionReducer,
     budget: budgetReducer,
+    goal: goalReducer,
     calendar: calendarReducer,
     theme: themeReducer,
     // Add more reducers here as you build other features

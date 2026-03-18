@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { safeAmount, sumAmountsCents } from "@/utils/transaction/helpers";
+import { safeAmount } from "@/utils/transaction/helpers";
 import type {
   TransactionItem,
   GroupedSection,
@@ -11,7 +11,6 @@ import type {
  */
 export function useTransactionFilters(transactions: any[], budgets: any[]) {
   // ── Filter controls ───────────────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState("");
   const [filterCategoryId, setFilterCategoryId] = useState<string | "all">(
     "all",
   );
@@ -47,7 +46,6 @@ export function useTransactionFilters(transactions: any[], budgets: any[]) {
   const filteredTransactions = useMemo(() => {
     const minParsed = minAmount.trim() !== "" ? Number(minAmount) || 0 : null;
     const maxParsed = maxAmount.trim() !== "" ? Number(maxAmount) || 0 : null;
-    const query = searchQuery.trim().toLowerCase();
 
     return transactions.filter((t: any) => {
       // Category filter — O(1) map lookup instead of O(n) find
@@ -64,27 +62,13 @@ export function useTransactionFilters(transactions: any[], budgets: any[]) {
       if ((t.type ?? "EXPENSE").toUpperCase() !== "EXPENSE") return false;
 
       // Amount range
-      const amt = safeAmount(t.amount);
+      const amt = safeAmount(t.displayAmount ?? t.amount);
       if (minParsed !== null && amt < minParsed) return false;
       if (maxParsed !== null && amt > maxParsed) return false;
 
-      // Free-text search across name and category
-      if (query) {
-        const matchesName = String(t.name).toLowerCase().includes(query);
-        const matchesCat = String(t.category).toLowerCase().includes(query);
-        if (!matchesName && !matchesCat) return false;
-      }
-
       return true;
     });
-  }, [
-    transactions,
-    filterCategoryId,
-    budgetCategoryMap,
-    minAmount,
-    maxAmount,
-    searchQuery,
-  ]);
+  }, [transactions, filterCategoryId, budgetCategoryMap, minAmount, maxAmount]);
 
   /**
    * Grouped-by-day sections sorted newest-first with integer-cent totals.
@@ -111,7 +95,13 @@ export function useTransactionFilters(transactions: any[], budgets: any[]) {
           return {
             title,
             data,
-            total: sumAmountsCents(data),
+            total:
+              Math.round(
+                data.reduce(
+                  (sum, tx) => sum + safeAmount(tx.displayAmount ?? tx.amount),
+                  0,
+                ) * 100,
+              ) / 100,
           };
         })
         // Sort sections: newest day first
@@ -123,8 +113,6 @@ export function useTransactionFilters(transactions: any[], budgets: any[]) {
 
   return {
     // Filter state
-    searchQuery,
-    setSearchQuery,
     filterCategoryId,
     setFilterCategoryId,
     minAmount,
