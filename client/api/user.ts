@@ -1,8 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiClient from "../config/apiClient";
-import { AxiosRequestConfig } from "axios";
 import BaseAPI from "./base";
 import type { IApiResponse } from "@/types/api/types";
+import {
+  AUTH_TOKEN_STORAGE_KEY,
+  USER_DATA_STORAGE_KEY,
+} from "@/constants/storageKeys";
+import {
+  clearAuthToken,
+  getAuthToken,
+  setAuthToken,
+} from "@/utils/secureStorage";
+import { logger } from "@/utils/logger";
 import {
   type ILoginData,
   type ISignupData,
@@ -26,11 +35,12 @@ async function clearUserStorage(userId?: string | null): Promise<void> {
           k.startsWith(`budgets:${userId}:`),
       );
       if (keysToRemove.length > 0) await AsyncStorage.multiRemove(keysToRemove);
-    } catch {
-      // ignore
+    } catch (error) {
+      logger.warn("UserAPI", "Failed to clear per-user cache keys", error);
     }
   }
-  await AsyncStorage.multiRemove(["authToken", "userData"]);
+  await clearAuthToken();
+  await AsyncStorage.removeItem(USER_DATA_STORAGE_KEY);
 }
 
 class UserAPI extends BaseAPI {
@@ -38,31 +48,34 @@ class UserAPI extends BaseAPI {
     credentials: ILoginData,
   ): Promise<IApiResponse<{ user: IUser; token: string }>> {
     const response = await this.makeRequest<{ user: IUser; token: string }>(
-      "/user/login",
+      "/auth/login",
       { method: "POST", data: credentials },
     );
 
-    await AsyncStorage.setItem("authToken", response.data.token);
-    await AsyncStorage.setItem("userData", JSON.stringify(response.data.user));
+    await setAuthToken(response.data.token);
+    await AsyncStorage.setItem(
+      USER_DATA_STORAGE_KEY,
+      JSON.stringify(response.data.user),
+    );
 
     return response;
   }
 
   async signup(userData: ISignupData): Promise<IApiResponse<any>> {
-    return this.makeRequest<any>("/user/signup", {
+    return this.makeRequest<any>("/auth/register", {
       method: "POST",
       data: userData,
     });
   }
 
   async logout(): Promise<void> {
-    const rawUser = await AsyncStorage.getItem("userData");
+    const rawUser = await AsyncStorage.getItem(USER_DATA_STORAGE_KEY);
     const userId = rawUser ? JSON.parse(rawUser)?.id : null;
     await clearUserStorage(userId);
   }
 
   async deleteAccount(userId: string): Promise<IApiResponse<IUser>> {
-    const response = await this.makeRequest<IUser>(`/user/delete/${userId}`, {
+    const response = await this.makeRequest<IUser>(`/users/${userId}`, {
       method: "DELETE",
     });
     await clearUserStorage(userId);
@@ -76,13 +89,17 @@ class UserAPI extends BaseAPI {
     const formData = new FormData();
     formData.append("profilePicture", imageFile);
 
-    const response = await apiClient.post(`/user/${userId}/upload`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const response = await apiClient.post(
+      `/users/${userId}/profile-picture`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    );
 
     if (response?.data?.data) {
       await AsyncStorage.setItem(
-        "userData",
+        USER_DATA_STORAGE_KEY,
         JSON.stringify(response.data.data),
       );
     }
@@ -92,15 +109,22 @@ class UserAPI extends BaseAPI {
 
   async deleteProfilePictureById(userId: string): Promise<IApiResponse<IUser>> {
     const response = await this.makeRequest<IUser>(
-      `/user/${userId}/profile-picture`,
+      `/users/${userId}/profile-picture`,
       { method: "DELETE" },
     );
 
     if (response?.data) {
       try {
-        await AsyncStorage.setItem("userData", JSON.stringify(response.data));
-      } catch {
-        // ignore storage errors
+        await AsyncStorage.setItem(
+          USER_DATA_STORAGE_KEY,
+          JSON.stringify(response.data),
+        );
+      } catch (error) {
+        logger.warn(
+          "UserAPI",
+          "Failed to persist profile picture deletion",
+          error,
+        );
       }
     }
 
@@ -112,14 +136,14 @@ class UserAPI extends BaseAPI {
     newPassword: string;
     confirmPassword: string;
   }): Promise<IApiResponse<any>> {
-    return this.makeRequest<any>("/user/change-password", {
-      method: "POST",
+    return this.makeRequest<any>("/users/me/password", {
+      method: "PATCH",
       data: payload,
     });
   }
 
   async forgotPassword(email: { email: string }): Promise<IApiResponse<any>> {
-    return this.makeRequest<any>("/user/forgot-password", {
+    return this.makeRequest<any>("/auth/forgot-password", {
       method: "POST",
       data: email,
     });
@@ -132,23 +156,48 @@ class UserAPI extends BaseAPI {
     confirmPassword?: string;
     verifyOnly?: boolean;
   }): Promise<IApiResponse<any>> {
-    return this.makeRequest<any>("/user/reset-password", {
+    return this.makeRequest<any>("/auth/reset-password", {
       method: "POST",
       data: payload,
     });
   }
 
   async updateCurrency(currency: string): Promise<IApiResponse<IUser>> {
-    const response = await this.makeRequest<IUser>("/user/currency", {
-      method: "PUT",
+    const response = await this.makeRequest<IUser>("/users/me/currency", {
+      method: "PATCH",
       data: { currency },
     });
 
     if (response?.data) {
       try {
-        await AsyncStorage.setItem("userData", JSON.stringify(response.data));
-      } catch {
-        // ignore storage errors
+        await AsyncStorage.setItem(
+          USER_DATA_STORAGE_KEY,
+          JSON.stringify(response.data),
+        );
+      } catch (error) {
+        logger.warn("UserAPI", "Failed to persist updated currency", error);
+      }
+    }
+
+    return response;
+  }
+
+  async updateMonthlyIncome(
+    monthlyIncome: number,
+  ): Promise<IApiResponse<IUser>> {
+    const response = await this.makeRequest<IUser>("/users/me/monthly-income", {
+      method: "PATCH",
+      data: { monthlyIncome },
+    });
+
+    if (response?.data) {
+      try {
+        await AsyncStorage.setItem(
+          USER_DATA_STORAGE_KEY,
+          JSON.stringify(response.data),
+        );
+      } catch (error) {
+        logger.warn("UserAPI", "Failed to persist monthly income", error);
       }
     }
 
@@ -158,17 +207,32 @@ class UserAPI extends BaseAPI {
   // Utility Methods
   async getStoredToken(): Promise<string | null> {
     try {
-      return await AsyncStorage.getItem("authToken");
-    } catch {
+      const token = await getAuthToken();
+      if (token) {
+        return token;
+      }
+
+      // Legacy fallback path: migrate old AsyncStorage token into secure storage.
+      const legacyToken = await AsyncStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+      if (legacyToken) {
+        await setAuthToken(legacyToken);
+        await AsyncStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+        return legacyToken;
+      }
+
+      return null;
+    } catch (error) {
+      logger.warn("UserAPI", "Failed to read token from storage", error);
       return null;
     }
   }
 
   async getStoredUser(): Promise<IUser | null> {
     try {
-      const userData = await AsyncStorage.getItem("userData");
+      const userData = await AsyncStorage.getItem(USER_DATA_STORAGE_KEY);
       return userData ? JSON.parse(userData) : null;
-    } catch {
+    } catch (error) {
+      logger.warn("UserAPI", "Failed to read user profile from storage", error);
       return null;
     }
   }

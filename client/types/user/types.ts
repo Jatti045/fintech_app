@@ -18,6 +18,7 @@ export interface IUser {
   email: string;
   profilePic?: string | null;
   currency?: string;
+  monthlyIncome?: number;
   createdAt?: string;
   updatedAt?: string;
 }

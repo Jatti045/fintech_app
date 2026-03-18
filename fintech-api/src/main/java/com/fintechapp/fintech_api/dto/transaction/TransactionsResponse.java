@@ -1,0 +1,76 @@
+package com.fintechapp.fintech_api.dto.transaction;
+
+import java.time.Instant;
+import java.util.List;
+
+import com.fintechapp.fintech_api.model.TransactionType;
+
+public record TransactionsResponse(
+                boolean success,
+                String message,
+                Data data) {
+
+        public record Data(
+                        List<TransactionItem> transaction,
+                        Pagination pagination,
+                        Summary summary,
+                        Filters filters) {
+        }
+
+        public record TransactionItem(
+                        String id,
+                        String name,
+                        Instant date,
+                        String category,
+                        TransactionType type,
+                        double amount,
+                        String baseCurrency,
+                        Double originalAmount,
+                        String originalCurrency,
+                        String icon,
+                        String description,
+                        BudgetInfo budget,
+                        GoalInfo goal) {
+        }
+
+        public record BudgetInfo(
+                        String id,
+                        String category,
+                        double limit,
+                        double spent) {
+        }
+
+        public record GoalInfo(
+                        String id,
+                        double target,
+                        double progress) {
+        }
+
+        public record Pagination(
+                        int currentPage,
+                        int totalPages,
+                        long totalCount,
+                        boolean hasNextPage,
+                        boolean hasPrevPage,
+                        int limit) {
+        }
+
+        public record Summary(
+                        double totalAmount,
+                        double monthlyIncome,
+                        double netSpent,
+                        double netRemaining,
+                        double spentPercentageOfIncome,
+                        double goalAllocationAmount,
+                        boolean includesGoalAllocations) {
+        }
+
+        public record Filters(
+                        String type,
+                        String category,
+                        String startDate,
+                        String endDate,
+                        String budgetId,
+                        String goalId) {
+        }
+}

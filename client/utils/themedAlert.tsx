@@ -129,7 +129,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
 
                 return (
                   <TouchableOpacity
-                    key={index}
+                    key={`${button.text}-${index}`}
                     style={[
                       styles.button,
                       buttons.length === 2 && styles.buttonHorizontal,

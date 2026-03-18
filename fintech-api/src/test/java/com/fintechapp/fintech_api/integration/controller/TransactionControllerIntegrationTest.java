@@ -1,0 +1,238 @@
+package com.fintechapp.fintech_api.integration.controller;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.Instant;
+import java.util.Map;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import com.fintechapp.fintech_api.integration.support.BaseIntegrationTest;
+import com.fintechapp.fintech_api.model.Budget;
+import com.fintechapp.fintech_api.model.Transaction;
+import com.fintechapp.fintech_api.model.TransactionType;
+import com.fintechapp.fintech_api.model.User;
+
+class TransactionControllerIntegrationTest extends BaseIntegrationTest {
+
+    // Asserts create transaction succeeds and updates linked budget spent for expense transactions.
+    @Test
+    void createTransaction_validExpenseRequest_createsTransactionAndUpdatesBudget() throws Exception {
+        User user = createUser("tx-create@example.com", "Password123!", "tx-create");
+        Budget budget = createBudget(user, "Food", 500, Instant.parse("2026-03-01T00:00:00Z"), "food-icon");
+
+        mockMvc.perform(post("/api/transactions")
+                        .header(authHeaderName(), authHeader(user))
+                        .contentType(json())
+                        .content(asJson(Map.of(
+                                "name", "Lunch",
+                                "month", 2,
+                                "year", 2026,
+                                "date", "2026-03-05T10:00:00Z",
+                                "category", "Food",
+                                "type", "EXPENSE",
+                                "amount", 25.5,
+                                "budgetId", budget.getId(),
+                                "description", "Team lunch"
+                        ))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.transaction.name").value("Lunch"));
+
+        Budget updatedBudget = budgetRepository.findById(budget.getId()).orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals(25.5, updatedBudget.getSpent());
+    }
+
+    // Asserts create transaction rejects missing required fields with 400.
+    @Test
+    void createTransaction_missingRequiredField_returnsBadRequest() throws Exception {
+        User user = createUser("tx-missing@example.com", "Password123!", "tx-missing");
+        Budget budget = createBudget(user, "Food", 500, Instant.parse("2026-03-01T00:00:00Z"), "food-icon");
+
+        mockMvc.perform(post("/api/transactions")
+                        .header(authHeaderName(), authHeader(user))
+                        .contentType(json())
+                        .content(asJson(Map.of(
+                                "month", 2,
+                                "year", 2026,
+                                "date", "2026-03-05T10:00:00Z",
+                                "category", "Food",
+                                "type", "EXPENSE",
+                                "amount", 25.5,
+                                "budgetId", budget.getId()
+                        ))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // Asserts create transaction rejects invalid transaction type and does not persist partial state.
+    @Test
+    void createTransaction_invalidType_returnsBadRequestAndDoesNotPersist() throws Exception {
+        User user = createUser("tx-invalid-type@example.com", "Password123!", "tx-invalid-type");
+        Budget budget = createBudget(user, "Food", 500, Instant.parse("2026-03-01T00:00:00Z"), "food-icon");
+
+        mockMvc.perform(post("/api/transactions")
+                        .header(authHeaderName(), authHeader(user))
+                        .contentType(json())
+                        .content(asJson(Map.of(
+                                "name", "Lunch",
+                                "month", 2,
+                                "year", 2026,
+                                "date", "2026-03-05T10:00:00Z",
+                                "category", "Food",
+                                "type", "INVALID",
+                                "amount", 25.5,
+                                "budgetId", budget.getId()
+                        ))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        org.junit.jupiter.api.Assertions.assertEquals(0, transactionRepository.findByUser_IdOrderByDateDesc(user.getId()).size());
+    }
+
+    // Asserts create transaction endpoint rejects unauthenticated requests.
+    @Test
+    void createTransaction_noToken_returnsUnauthorized() throws Exception {
+        mockMvc.perform(post("/api/transactions")
+                        .contentType(json())
+                        .content(asJson(Map.of("name", "Lunch"))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // Asserts get transactions returns persisted transactions with success response.
+    @Test
+    void getTransactions_validToken_returnsTransactions() throws Exception {
+        User user = createUser("tx-list@example.com", "Password123!", "tx-list");
+        Budget budget = createBudget(user, "Food", 500, Instant.parse("2026-03-01T00:00:00Z"), "food-icon");
+        createTransaction(user, budget, null, "Lunch", Instant.parse("2026-03-05T10:00:00Z"), "Food", TransactionType.EXPENSE, 25.5);
+
+        mockMvc.perform(get("/api/transactions")
+                        .header(authHeaderName(), authHeader(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.transaction", hasSize(1)))
+                .andExpect(jsonPath("$.data.transaction[0].name").value("Lunch"));
+    }
+
+    // Asserts get transactions endpoint rejects unauthenticated access.
+    @Test
+    void getTransactions_noToken_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/transactions"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // Asserts update transaction succeeds and persists updated amount.
+    @Test
+    void updateTransaction_validPatch_updatesTransaction() throws Exception {
+        User user = createUser("tx-update@example.com", "Password123!", "tx-update");
+        Budget budget = createBudget(user, "Food", 500, Instant.parse("2026-03-01T00:00:00Z"), "food-icon");
+        Transaction transaction = createTransaction(
+                user,
+                budget,
+                null,
+                "Lunch",
+                Instant.parse("2026-03-05T10:00:00Z"),
+                "Food",
+                TransactionType.EXPENSE,
+                25.5
+        );
+        budget.setSpent(25.5);
+        budgetRepository.save(budget);
+
+        mockMvc.perform(patch("/api/transactions/{transactionId}", transaction.getId())
+                        .header(authHeaderName(), authHeader(user))
+                        .contentType(json())
+                        .content(asJson(Map.of("amount", 40.0))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.transaction.amount").value(40.0));
+
+        Transaction reloaded = transactionRepository.findById(transaction.getId()).orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals(40.0, reloaded.getAmount());
+    }
+
+    // Asserts update transaction with unknown id returns 404.
+    @Test
+    void updateTransaction_nonExistentId_returnsNotFound() throws Exception {
+        User user = createUser("tx-update-missing@example.com", "Password123!", "tx-update-missing");
+
+        mockMvc.perform(patch("/api/transactions/{transactionId}", "missing-id")
+                        .header(authHeaderName(), authHeader(user))
+                        .contentType(json())
+                        .content(asJson(Map.of("amount", 40.0))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // Asserts update transaction endpoint rejects unauthenticated access.
+    @Test
+    void updateTransaction_noToken_returnsUnauthorized() throws Exception {
+        mockMvc.perform(patch("/api/transactions/{transactionId}", "any-id")
+                        .contentType(json())
+                        .content(asJson(Map.of("amount", 40.0))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // Asserts delete transaction removes the transaction row and returns deleted ID.
+    @Test
+    void deleteTransaction_existingId_deletesTransaction() throws Exception {
+        User user = createUser("tx-delete@example.com", "Password123!", "tx-delete");
+        Budget budget = createBudget(user, "Food", 500, Instant.parse("2026-03-01T00:00:00Z"), "food-icon");
+        Transaction transaction = createTransaction(
+                user,
+                budget,
+                null,
+                "Lunch",
+                Instant.parse("2026-03-05T10:00:00Z"),
+                "Food",
+                TransactionType.EXPENSE,
+                25.5
+        );
+        budget.setSpent(25.5);
+        budgetRepository.save(budget);
+
+        mockMvc.perform(delete("/api/transactions/{transactionId}", transaction.getId())
+                        .header(authHeaderName(), authHeader(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.deletedTransactionId").value(transaction.getId()));
+
+        org.junit.jupiter.api.Assertions.assertFalse(transactionRepository.findById(transaction.getId()).isPresent());
+    }
+
+    // Asserts delete transaction with unknown id returns 404.
+    @Test
+    void deleteTransaction_nonExistentId_returnsNotFound() throws Exception {
+        User user = createUser("tx-delete-missing@example.com", "Password123!", "tx-delete-missing");
+
+        mockMvc.perform(delete("/api/transactions/{transactionId}", "missing-id")
+                        .header(authHeaderName(), authHeader(user)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // Asserts delete transaction endpoint rejects unauthenticated access.
+    @Test
+    void deleteTransaction_noToken_returnsUnauthorized() throws Exception {
+        mockMvc.perform(delete("/api/transactions/{transactionId}", "any-id"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // TODO: RBAC is not implemented in current security config (no role claims/authorities checks).
+    @Disabled("TODO: Enable when endpoint-level role authorization is implemented")
+    @Test
+    void deleteTransaction_validTokenWrongRole_returnsForbidden() {
+    }
+}
+

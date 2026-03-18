@@ -1,8 +1,14 @@
-import { useBudgets, useTheme } from "@/hooks/useRedux";
+import {
+  useAuth,
+  useBudgets,
+  useTheme,
+  useTransactionMonthSummary,
+} from "@/hooks/useRedux";
 import { useThemedAlert } from "@/utils/themedAlert";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import {
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -40,6 +46,8 @@ function TransactionModal({
   onClose?: () => void;
 }) {
   const budgets = useBudgets();
+  const { user } = useAuth();
+  const monthSummary = useTransactionMonthSummary();
   const { THEME } = useTheme();
   const { showAlert } = useThemedAlert();
   const [showPicker, setShowPicker] = useState(false);
@@ -47,6 +55,8 @@ function TransactionModal({
   const [conversionPreview, setConversionPreview] = useState<string | null>(
     null,
   );
+  const [isCalculatingConversion, setIsCalculatingConversion] = useState(false);
+  const [convertedAmountForPreview, setConvertedAmountForPreview] = useState(0);
 
   const {
     txName,
@@ -78,6 +88,8 @@ function TransactionModal({
         setTxDate(new Date());
         setTxCurrency(userCurrency);
         setConversionPreview(null);
+        setIsCalculatingConversion(false);
+        setConvertedAmountForPreview(0);
       } catch (e) {
         // ignore
       }
@@ -90,8 +102,16 @@ function TransactionModal({
   useEffect(() => {
     if (editingTransaction) {
       try {
+        const existingOriginalAmount =
+          editingTransaction.originalAmount ?? editingTransaction.amount;
+        const existingOriginalCurrency =
+          editingTransaction.originalCurrency ||
+          editingTransaction.baseCurrency ||
+          userCurrency;
+
         setTxName(editingTransaction.name || "");
-        setTxAmount(String(editingTransaction.amount ?? ""));
+        setTxAmount(String(existingOriginalAmount ?? ""));
+        setTxCurrency(existingOriginalCurrency);
         setTxDate(
           editingTransaction.date
             ? new Date(editingTransaction.date)
@@ -105,32 +125,50 @@ function TransactionModal({
         // ignore
       }
     }
-  }, [editingTransaction]);
+  }, [editingTransaction, userCurrency]);
 
   // Show a live conversion preview when amount or currency changes
   useEffect(() => {
     if (txCurrency === userCurrency || !txAmount || Number(txAmount) <= 0) {
+      setIsCalculatingConversion(false);
       setConversionPreview(null);
+      setConvertedAmountForPreview(Number(txAmount || 0));
       return;
     }
     let cancelled = false;
+    setIsCalculatingConversion(true);
     (async () => {
       try {
         const rate = await getExchangeRate(txCurrency, userCurrency);
         if (!cancelled) {
           const converted = (Number(txAmount) * rate).toFixed(2);
+          setConvertedAmountForPreview(Number(converted));
           setConversionPreview(
             `≈ ${getCurrencySymbol(userCurrency)}${converted} ${userCurrency} (rate: ${rate.toFixed(4)})`,
           );
+          setIsCalculatingConversion(false);
         }
       } catch {
-        if (!cancelled) setConversionPreview("Unable to fetch rate");
+        if (!cancelled) {
+          setConvertedAmountForPreview(0);
+          setConversionPreview("Unable to fetch rate");
+          setIsCalculatingConversion(false);
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [txAmount, txCurrency, userCurrency]);
+
+  const monthlyIncome = Number(user?.monthlyIncome ?? 0);
+  const currentMonthSpent = Number(monthSummary.totalAmount ?? 0);
+  const pendingAmount = Number(convertedAmountForPreview || 0);
+  const projectedSpent =
+    currentMonthSpent + (pendingAmount > 0 ? pendingAmount : 0);
+  const projectedRemaining = monthlyIncome - projectedSpent;
+  const projectedPercent =
+    monthlyIncome > 0 ? (projectedSpent / monthlyIncome) * 100 : 0;
 
   const clampDate = (d: Date) => {
     if (d < monthStartDate) return new Date(monthStartDate);
@@ -240,6 +278,53 @@ function TransactionModal({
                   Tip: Enter the numeric amount without currency symbol. Use a
                   dot for decimals.
                 </Text>
+
+                <View
+                  style={{
+                    marginTop: 10,
+                    backgroundColor: THEME.surface,
+                    borderColor: THEME.border,
+                    borderWidth: 1,
+                    borderRadius: 10,
+                    padding: 10,
+                  }}
+                >
+                  {monthlyIncome > 0 ? (
+                    <>
+                      <Text
+                        style={{ color: THEME.textPrimary, fontWeight: "600" }}
+                      >
+                        Net spending preview
+                      </Text>
+                      <Text
+                        style={{ color: THEME.textSecondary, marginTop: 4 }}
+                      >
+                        After this purchase: {getCurrencySymbol(userCurrency)}
+                        {projectedSpent.toFixed(2)} spent of{" "}
+                        {getCurrencySymbol(userCurrency)}
+                        {monthlyIncome.toFixed(2)} (
+                        {projectedPercent.toFixed(1)}%).
+                      </Text>
+                      <Text
+                        style={{
+                          marginTop: 4,
+                          color:
+                            projectedRemaining >= 0
+                              ? THEME.primary
+                              : THEME.error,
+                        }}
+                      >
+                        Remaining: {getCurrencySymbol(userCurrency)}
+                        {projectedRemaining.toFixed(2)}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={{ color: THEME.textSecondary }}>
+                      Set your monthly income in Profile to see net spending vs
+                      income.
+                    </Text>
+                  )}
+                </View>
               </View>
 
               {/* Currency Selector */}
@@ -288,7 +373,32 @@ function TransactionModal({
                 </TouchableOpacity>
 
                 {/* Conversion preview */}
-                {conversionPreview && (
+                {isCalculatingConversion ? (
+                  <View
+                    style={{
+                      marginTop: 8,
+                      backgroundColor: THEME.surface,
+                      borderRadius: 8,
+                      padding: 10,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <ActivityIndicator size="small" color={THEME.primary} />
+                    <Text
+                      style={{
+                        color: THEME.primary,
+                        fontSize: 13,
+                        fontWeight: "500",
+                      }}
+                    >
+                      Calculating conversion rate...
+                    </Text>
+                  </View>
+                ) : null}
+
+                {conversionPreview && !isCalculatingConversion && (
                   <View
                     style={{
                       marginTop: 8,

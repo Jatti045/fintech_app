@@ -10,10 +10,12 @@ import type { SettingsListProps } from "@/types/profile/types";
 export default function SettingsList({ THEME, items }: SettingsListProps) {
   return (
     <>
-      {items.map((item, index) => (
+      {items.map((item) => (
         <TouchableOpacity
-          key={index}
+          key={`${item.title}-${item.icon}`}
           onPress={item.onPress}
+          accessibilityRole="button"
+          accessibilityLabel={item.title}
           style={{ backgroundColor: THEME.surface }}
           className="flex-row items-center justify-between p-4 rounded-xl mb-3"
         >

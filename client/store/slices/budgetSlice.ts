@@ -11,6 +11,7 @@ import {
 import { createTransaction } from "./transactionSlice";
 import { deleteTransaction } from "./transactionSlice";
 import type { IBudget, BudgetState } from "@/types/budget/types";
+import { logger } from "@/utils/logger";
 
 export type { IBudget, BudgetState };
 
@@ -43,7 +44,11 @@ export const createBudget = createAsyncThunk(
           budgetData.month,
         );
       } catch (e) {
-        // ignore
+        logger.warn(
+          "budgetSlice",
+          "Failed to append created budget to cache",
+          e,
+        );
       }
 
       return response;
@@ -74,7 +79,7 @@ export const fetchBudgets = createAsyncThunk(
         const toStore = response.data ?? [];
         await setBudgetsCache(currentYear, currentMonth, toStore);
       } catch (e) {
-        // ignore
+        logger.warn("budgetSlice", "Failed to persist budgets cache", e);
       }
 
       return response.data;
@@ -93,13 +98,17 @@ export const fetchBudgets = createAsyncThunk(
               const toStore = fresh.data ?? [];
               await setBudgetsCache(currentYear, currentMonth, toStore);
             } catch (err) {
-              // ignore
+              logger.warn(
+                "budgetSlice",
+                "Background budget cache revalidation failed",
+                err,
+              );
             }
           })();
           return cached;
         }
       } catch (e) {
-        // ignore
+        logger.warn("budgetSlice", "Failed to read fallback budgets cache", e);
       }
       return rejectWithValue(error.message);
     }
@@ -117,7 +126,11 @@ export const deleteBudget = createAsyncThunk(
         // Also attempt cross-month invalidation
         await removeBudgetFromCacheByIdAcrossAllMonths(budgetId);
       } catch (e) {
-        // ignore
+        logger.warn(
+          "budgetSlice",
+          "Failed to evict deleted budget from cache",
+          e,
+        );
       }
       return response;
     } catch (error: any) {
@@ -144,7 +157,11 @@ export const updateBudget = createAsyncThunk(
           await appendBudgetToCache(updated, d.getFullYear(), d.getMonth());
         }
       } catch (e) {
-        // ignore
+        logger.warn(
+          "budgetSlice",
+          "Failed to update budget cache after edit",
+          e,
+        );
       }
       return response;
     } catch (error: any) {

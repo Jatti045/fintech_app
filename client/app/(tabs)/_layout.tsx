@@ -6,6 +6,8 @@ import { useEffect } from "react";
 import { useAppDispatch, useCalendar, useTheme } from "@/hooks/useRedux";
 import { fetchTransaction } from "@/store/slices/transactionSlice";
 import { fetchBudgets } from "@/store/slices/budgetSlice";
+import { fetchGoals } from "@/store/slices/goalSlice";
+import { PAGINATION_LIMIT } from "@/constants/appConfig";
 
 export default function TabsLayout() {
   const dispatch = useAppDispatch();
@@ -23,11 +25,12 @@ export default function TabsLayout() {
         currentMonth: month,
         currentYear: year,
         page: 1,
-        limit: 10,
+        limit: PAGINATION_LIMIT,
         useCache: false, // Disable cache to get accurate pagination
-      })
+      }),
     );
     dispatch(fetchBudgets({ currentMonth: month, currentYear: year }));
+    dispatch(fetchGoals());
   }, [dispatch, month, year]);
 
   return (
@@ -73,6 +76,16 @@ export default function TabsLayout() {
           tabBarLabel: "Budget",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="wallet" color={color} size={size} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="goals"
+        options={{
+          tabBarLabel: "Goals",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="flag" color={color} size={size} />
           ),
         }}
       />

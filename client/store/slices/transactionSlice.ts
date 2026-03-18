@@ -1,4 +1,8 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createAsyncThunk,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import transactionAPI from "../../api/transaction";
 import type { ITransaction } from "@/types/transaction/types";
 import type { TransactionState } from "@/types/transaction/types";
@@ -8,9 +12,52 @@ import {
   appendTransactionToCache,
   removeTransactionFromCacheById,
   removeTransactionFromCacheByIdAcrossAllMonths,
+  getGoalAllocationsTotalCache,
 } from "../../utils/cache";
+import { PAGINATION_LIMIT } from "@/constants/appConfig";
+import { logger } from "@/utils/logger";
 
 export type { TransactionState };
+
+const round2 = (value: number) => Math.round(value * 100) / 100;
+
+const withGoalAllocationFallback = async (
+  payload: any,
+  currentYear: number,
+  currentMonth: number,
+) => {
+  const base = payload ?? {};
+  const summary = base.summary ?? null;
+  if (!summary) return base;
+
+  const includesGoalAllocations = Boolean(summary.includesGoalAllocations);
+  if (includesGoalAllocations) return base;
+
+  const cachedGoalAllocations = await getGoalAllocationsTotalCache(
+    currentYear,
+    currentMonth,
+  );
+  if (!cachedGoalAllocations) return base;
+
+  const totalAmount = round2(
+    Number(summary.totalAmount || 0) + Number(cachedGoalAllocations || 0),
+  );
+  const monthlyIncome = Number(summary.monthlyIncome || 0);
+
+  return {
+    ...base,
+    summary: {
+      ...summary,
+      totalAmount,
+      netSpent: totalAmount,
+      netRemaining: round2(monthlyIncome - totalAmount),
+      spentPercentageOfIncome:
+        monthlyIncome > 0 ? round2((totalAmount / monthlyIncome) * 100) : 0,
+      goalAllocationAmount: Number(summary.goalAllocationAmount || 0),
+      includesGoalAllocations: false,
+    },
+  };
+};
 
 const initialState: TransactionState = {
   transactions: [],
@@ -45,6 +92,10 @@ const initialState: TransactionState = {
   },
   monthSummary: {
     totalAmount: 0,
+    monthlyIncome: 0,
+    netSpent: 0,
+    netRemaining: 0,
+    spentPercentageOfIncome: 0,
   },
   isLoadingMore: false,
 };
@@ -60,7 +111,7 @@ export const fetchTransaction = createAsyncThunk(
       endDate = null,
       useCache = true,
       page = 1,
-      limit = 10,
+      limit = PAGINATION_LIMIT,
     }: {
       searchQuery: string;
       currentMonth: number;
@@ -92,11 +143,19 @@ export const fetchTransaction = createAsyncThunk(
             const toStore = response.data?.transaction ?? response.data ?? [];
             await setTransactionsCache(currentYear, currentMonth, toStore);
           } catch (err) {
-            // ignore
+            logger.warn(
+              "transactionSlice",
+              "Failed to cache first transaction page",
+              err,
+            );
           }
         }
 
-        return response.data;
+        return withGoalAllocationFallback(
+          response.data,
+          currentYear,
+          currentMonth,
+        );
       }
 
       // If allowed, return cached data immediately to avoid API call (page 1 only)
@@ -117,7 +176,11 @@ export const fetchTransaction = createAsyncThunk(
                 const toStore = fresh.data?.transaction ?? fresh.data ?? [];
                 await setTransactionsCache(currentYear, currentMonth, toStore);
               } catch (err) {
-                // ignore background revalidation errors
+                logger.warn(
+                  "transactionSlice",
+                  "Background revalidation failed",
+                  err,
+                );
               }
             })();
             // Return cached data with default pagination
@@ -134,7 +197,11 @@ export const fetchTransaction = createAsyncThunk(
             } as any;
           }
         } catch (e) {
-          // ignore cache errors and fall back to network
+          logger.warn(
+            "transactionSlice",
+            "Cache read failed, falling back to network",
+            e,
+          );
         }
       }
 
@@ -156,17 +223,25 @@ export const fetchTransaction = createAsyncThunk(
         const toStore = response.data?.transaction ?? response.data ?? [];
         await setTransactionsCache(currentYear, currentMonth, toStore);
       } catch (err) {
-        // ignore
+        logger.warn(
+          "transactionSlice",
+          "Failed to persist transactions cache",
+          err,
+        );
       }
 
-      return response.data;
+      return withGoalAllocationFallback(
+        response.data,
+        currentYear,
+        currentMonth,
+      );
     } catch (error: any) {
       // On network failure try to return cached data
       try {
         const cached = await getTransactionsCache(currentYear, currentMonth);
         if (cached) return { transaction: cached } as any;
       } catch (err) {
-        // ignore
+        logger.warn("transactionSlice", "Fallback cache read failed", err);
       }
       return rejectWithValue(error.message || "Failed to fetch transactions");
     }
@@ -184,7 +259,7 @@ export const fetchMoreTransactions = createAsyncThunk(
       startDate = null,
       endDate = null,
       page = 1,
-      limit = 10,
+      limit = PAGINATION_LIMIT,
     }: {
       searchQuery: string;
       currentMonth: number;
@@ -227,7 +302,11 @@ export const createTransaction = createAsyncThunk(
         const created = response.data?.transaction ?? response.data;
         await appendTransactionToCache(created);
       } catch (err) {
-        // ignore
+        logger.warn(
+          "transactionSlice",
+          "Failed to append created transaction to cache",
+          err,
+        );
       }
 
       return response;
@@ -258,7 +337,11 @@ export const deleteTransaction = createAsyncThunk(
           await removeTransactionFromCacheByIdAcrossAllMonths(transactionId);
         }
       } catch (e) {
-        // ignore
+        logger.warn(
+          "transactionSlice",
+          "Failed to update cache after delete",
+          e,
+        );
       }
       return response;
     } catch (error: any) {
@@ -274,7 +357,7 @@ export const updateTransaction = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      console.log("Updating transaction id:", id, "with updates:", updates);
+      logger.debug("transactionSlice", `Updating transaction ${id}`, updates);
 
       const response = await transactionAPI.update(id, updates);
 
@@ -286,7 +369,11 @@ export const updateTransaction = createAsyncThunk(
           try {
             await removeTransactionFromCacheByIdAcrossAllMonths(updated.id);
           } catch (e) {
-            // continue
+            logger.warn(
+              "transactionSlice",
+              "Failed cross-month cache invalidation",
+              e,
+            );
           }
 
           if (updated.date) {
@@ -295,7 +382,11 @@ export const updateTransaction = createAsyncThunk(
           }
         }
       } catch (e) {
-        // ignore cache errors
+        logger.warn(
+          "transactionSlice",
+          "Failed to update cache after transaction update",
+          e,
+        );
       }
 
       return response;
@@ -309,7 +400,37 @@ const transactionSlice = createSlice({
   name: "transaction",
   initialState,
   reducers: {
-    // Synchronous actions can be defined here
+    addGoalAllocationSpent: (state, action: PayloadAction<number>) => {
+      const amount = Math.max(0, Number(action.payload || 0));
+      if (!amount) return;
+
+      const nextTotal =
+        Math.round((state.monthSummary.totalAmount + amount) * 100) / 100;
+      state.monthSummary.totalAmount = nextTotal;
+
+      const income = Number(state.monthSummary.monthlyIncome || 0);
+      state.monthSummary.netSpent = nextTotal;
+      state.monthSummary.netRemaining =
+        Math.round((income - nextTotal) * 100) / 100;
+      state.monthSummary.spentPercentageOfIncome =
+        income > 0 ? Math.round((nextTotal / income) * 10000) / 100 : 0;
+    },
+    removeGoalAllocationSpent: (state, action: PayloadAction<number>) => {
+      const amount = Math.max(0, Number(action.payload || 0));
+      if (!amount) return;
+
+      const nextTotal =
+        Math.round(Math.max(0, state.monthSummary.totalAmount - amount) * 100) /
+        100;
+      state.monthSummary.totalAmount = nextTotal;
+
+      const income = Number(state.monthSummary.monthlyIncome || 0);
+      state.monthSummary.netSpent = nextTotal;
+      state.monthSummary.netRemaining =
+        Math.round((income - nextTotal) * 100) / 100;
+      state.monthSummary.spentPercentageOfIncome =
+        income > 0 ? Math.round((nextTotal / income) * 10000) / 100 : 0;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -336,6 +457,11 @@ const transactionSlice = createSlice({
         if (action.payload.summary) {
           state.monthSummary = {
             totalAmount: action.payload.summary.totalAmount || 0,
+            monthlyIncome: action.payload.summary.monthlyIncome || 0,
+            netSpent: action.payload.summary.netSpent || 0,
+            netRemaining: action.payload.summary.netRemaining || 0,
+            spentPercentageOfIncome:
+              action.payload.summary.spentPercentageOfIncome || 0,
           };
         }
       })
@@ -377,7 +503,7 @@ const transactionSlice = createSlice({
         state.error = null;
       })
       .addCase(createTransaction.fulfilled, (state, action) => {
-        console.log("Transaction Payload:", action.payload);
+        logger.debug("transactionSlice", "Transaction created", action.payload);
 
         state.isAdding = false;
         state.error = null;
@@ -471,6 +597,8 @@ const transactionSlice = createSlice({
 
 // Optional action: replace transactions array directly (useful after forced re-fetch)
 export const { reducer: transactionReducer } = transactionSlice;
+export const { addGoalAllocationSpent, removeGoalAllocationSpent } =
+  transactionSlice.actions;
 export const replaceTransactions = (arr: ITransaction[]) => ({
   type: "transaction/replace",
   payload: arr,

@@ -3,11 +3,12 @@ import { Stack } from "expo-router";
 import { Provider } from "react-redux";
 import { store, loadUserFromStorage, useAuth } from "../store";
 import { useEffect } from "react";
-import { useAppDispatch, useCalendar, useTheme } from "@/hooks/useRedux";
-import { ActivityIndicator, View, Text } from "react-native";
+import { useAppDispatch, useTheme } from "@/hooks/useRedux";
+import { ActivityIndicator, View } from "react-native";
 import { loadThemeFromStorage } from "@/store/slices/themeSlice";
 import { AlertProvider } from "@/utils/themedAlert";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import AppErrorBoundary from "@/components/global/AppErrorBoundary";
 
 function AppRoutes() {
   const dispatch = useAppDispatch();
@@ -52,7 +53,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
         <AlertProvider>
-          <AppRoutes />
+          <AppErrorBoundary>
+            <AppRoutes />
+          </AppErrorBoundary>
         </AlertProvider>
       </Provider>
     </GestureHandlerRootView>

@@ -24,7 +24,14 @@ const TransactionRow = React.memo(function TransactionRow({
 }) {
   const { THEME } = useTheme();
   const budgets = useBudgets();
-  const amt = safeAmount(tx.amount);
+  const amt = safeAmount(tx.displayAmount ?? tx.amount);
+  const displayCurrency = tx.displayCurrency || tx.baseCurrency || "USD";
+
+  const originalReference = useMemo(() => {
+    if (tx.originalAmount == null || !tx.originalCurrency) return null;
+    if (tx.originalCurrency === displayCurrency) return null;
+    return `Orig ${formatCurrency(Number(tx.originalAmount), tx.originalCurrency)} (${tx.originalCurrency})`;
+  }, [tx.originalAmount, tx.originalCurrency, displayCurrency]);
 
   const displayCategory = useMemo(() => {
     if (tx.budgetId) {
@@ -90,6 +97,15 @@ const TransactionRow = React.memo(function TransactionRow({
             >
               {formatDate(tx.date)} - {tx.name}
             </Text>
+            {originalReference ? (
+              <Text
+                style={{ color: THEME.textSecondary, fontSize: 12 }}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {originalReference}
+              </Text>
+            ) : null}
           </View>
         </View>
         <View style={{ marginLeft: 12, alignItems: "flex-end" }}>
@@ -98,7 +114,7 @@ const TransactionRow = React.memo(function TransactionRow({
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            - {formatCurrency(amt)}
+            - {formatCurrency(amt, displayCurrency)}
           </Text>
         </View>
       </TouchableOpacity>

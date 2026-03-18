@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { THEME_PALETTES } from "@/constants/ThemePalettes";
 import type { ITheme, IThemeState } from "@/types/theme/types";
+import { logger } from "@/utils/logger";
 
 const initialState: IThemeState = {
   selectedTheme: "Light",
@@ -15,7 +16,7 @@ export const loadThemeFromStorage = createAsyncThunk(
       const storedTheme = await AsyncStorage.getItem("selectedTheme");
       return storedTheme;
     } catch (error) {
-      console.error("Failed to load theme from storage:", error);
+      logger.warn("themeSlice", "Failed to load theme from storage", error);
       return rejectWithValue("Failed to load theme");
     }
   },
@@ -45,7 +46,7 @@ const themeSlice = createSlice({
         state.THEME = THEME_PALETTES[key] ?? THEME_PALETTES.LIGHT;
       })
       .addCase(loadThemeFromStorage.rejected, (state, action) => {
-        console.error("Failed to load theme from storage:", action.error);
+        logger.warn("themeSlice", "Theme load thunk rejected", action.error);
       });
   },
 });

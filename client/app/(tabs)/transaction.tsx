@@ -1,8 +1,15 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, {
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
+import { useRefresh } from "@/hooks/useRefresh";
 import { RefreshControl, SectionList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TransactionModal from "@/components/transaction/TxModal";
-import SearchTransaction from "@/components/transaction/TxSearchBar";
+import SearchBar from "@/components/global/SearchBar";
 import AddNewTransactionButton from "@/components/transaction/AddTxButton";
 import FilterTransaction from "@/components/transaction/TxFilterOpt";
 import SectionHeader from "@/components/transaction/SectionHeader";
@@ -11,9 +18,12 @@ import ListFooter from "@/components/transaction/TxFooter";
 import { useTransactionOperations } from "@/hooks/transaction/useTransactionOperation";
 import { useTransactionFilters } from "@/hooks/transaction/useTransactionFilters";
 import { useTransactionLoadMore } from "@/hooks/transaction/useTransactionLoadMore";
+import { useTransactionSearch } from "@/hooks/transaction/useTransactionSearch";
+import { useTransactionDisplayAmounts } from "@/hooks/transaction/useTransactionDisplayAmounts";
 import { TransactionSkeleton } from "@/components/skeleton/SkeletonLoader";
 import type { TransactionItem } from "@/types/transaction/types";
 import {
+  useAuth,
   useBudgets,
   useTheme,
   useTransactions,
@@ -21,44 +31,78 @@ import {
   useCalendar,
 } from "@/hooks/useRedux";
 import { useAppDispatch } from "@/store";
-import { fetchTransaction } from "@/store/slices/transactionSlice";
 import { fetchBudgets } from "@/store/slices/budgetSlice";
 import Loader from "@/utils/loader";
+import { PAGINATION_LIMIT } from "@/constants/appConfig";
 
 export default function TransactionScreen() {
   const transactions = useTransactions();
   const budgets = useBudgets();
+  const { user } = useAuth();
+  const activeCurrency = user?.currency || "USD";
   const { THEME } = useTheme();
   const { isAdding, isEditing, isDeleting, isLoading } = useTransactionStatus();
   const calendar = useCalendar();
   const dispatch = useAppDispatch();
-  const [refreshing, setRefreshing] = useState(false);
+  const { searchQuery, setSearchQuery, normalizedQuery, refreshTransactions } =
+    useTransactionSearch({
+      currentMonth: calendar.month,
+      currentYear: calendar.year,
+      limit: PAGINATION_LIMIT,
+    });
+  const isSearching = searchQuery.trim().length > 0;
+  const [suppressInitialSkeleton, setSuppressInitialSkeleton] = useState(false);
+  const clearSearchWaitingForLoadRef = useRef(false);
+  const clearSearchSawLoadingRef = useRef(false);
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([
-        dispatch(
-          fetchTransaction({
-            searchQuery: "",
-            currentMonth: calendar.month,
-            currentYear: calendar.year,
-            page: 1,
-            limit: 10,
-            useCache: false,
-          }),
-        ),
-        dispatch(
-          fetchBudgets({
-            currentMonth: calendar.month,
-            currentYear: calendar.year,
-          }),
-        ),
-      ]);
-    } finally {
-      setRefreshing(false);
+  const handleSearchQueryChange = useCallback(
+    (nextQuery: string) => {
+      const hadQuery = searchQuery.trim().length > 0;
+      const clearingQuery = hadQuery && nextQuery.trim().length === 0;
+      if (clearingQuery) {
+        setSuppressInitialSkeleton(true);
+        clearSearchWaitingForLoadRef.current = true;
+        clearSearchSawLoadingRef.current = false;
+      }
+      setSearchQuery(nextQuery);
+    },
+    [searchQuery, setSearchQuery],
+  );
+
+  useEffect(() => {
+    // Keep suppression active until the clear-search fetch has both started
+    // and completed, avoiding a skeleton flash during debounce.
+    if (!clearSearchWaitingForLoadRef.current) return;
+
+    if (isLoading) {
+      clearSearchSawLoadingRef.current = true;
+      return;
     }
-  }, [dispatch, calendar.month, calendar.year]);
+
+    if (clearSearchSawLoadingRef.current) {
+      clearSearchWaitingForLoadRef.current = false;
+      clearSearchSawLoadingRef.current = false;
+      setSuppressInitialSkeleton(false);
+    }
+  }, [isLoading]);
+
+  const { displayTransactions } = useTransactionDisplayAmounts(
+    transactions,
+    activeCurrency,
+  );
+
+  // Use generic refresh hook
+  const { refreshing, onRefresh } = useRefresh(() =>
+    Promise.all([
+      refreshTransactions(),
+      dispatch(
+        fetchBudgets({
+          currentMonth: calendar.month,
+          currentYear: calendar.year,
+        }),
+      ),
+    ]),
+  );
 
   // Only the delete handler is needed at screen level;
   // create + update are fully managed inside TransactionModal.
@@ -66,8 +110,6 @@ export default function TransactionScreen() {
 
   // Custom hook encapsulating all filter state + logic for deriving the filtered + grouped transaction data fed into the SectionList.
   const {
-    searchQuery,
-    setSearchQuery,
     filterCategoryId,
     setFilterCategoryId,
     minAmount,
@@ -76,13 +118,17 @@ export default function TransactionScreen() {
     setMaxAmount,
     clearFilters,
     sectionsWithTotals,
-  } = useTransactionFilters(transactions, budgets);
+  } = useTransactionFilters(displayTransactions, budgets);
 
   const { handleLoadMore, isLoadingMore, hasNextPage } =
     useTransactionLoadMore();
 
-  /** Show skeleton while initial data is loading (transactions empty + loading) */
-  const isInitialLoading = isLoading && transactions.length === 0;
+  /** Show skeleton only for true initial load, not while searching. */
+  const isInitialLoading =
+    isLoading &&
+    transactions.length === 0 &&
+    !isSearching &&
+    !suppressInitialSkeleton;
 
   const [openSheet, setOpenSheet] = useState(false);
   const [editingTransaction, setEditingTransaction] =
@@ -114,8 +160,14 @@ export default function TransactionScreen() {
       section,
     }: {
       section: { title: string; total: number; data: TransactionItem[] };
-    }) => <SectionHeader title={section.title} total={section.total} />,
-    [],
+    }) => (
+      <SectionHeader
+        title={section.title}
+        total={section.total}
+        currencyCode={activeCurrency}
+      />
+    ),
+    [activeCurrency],
   );
 
   // Note: the `TransactionItem` type is minimal and only includes the fields needed for display in the list. The full transaction details (including any additional fields) are passed to the modal when editing. This keeps the list rendering efficient while still allowing full access to transaction data when needed.
@@ -141,29 +193,23 @@ export default function TransactionScreen() {
     () => (
       <ListFooter
         hasNextPage={hasNextPage}
-        isLoadingMore={isLoadingMore}
+        isLoadingMore={isSearching ? false : isLoadingMore}
         hasTransactions={transactions.length > 0}
-        onLoadMore={handleLoadMore}
+        onLoadMore={() => handleLoadMore(normalizedQuery)}
       />
     ),
-    [hasNextPage, isLoadingMore, transactions.length, handleLoadMore],
+    [
+      hasNextPage,
+      isLoadingMore,
+      isSearching,
+      transactions.length,
+      handleLoadMore,
+      normalizedQuery,
+    ],
   );
 
-  // Show skeleton loader during initial data fetch
-  if (isInitialLoading) {
-    return (
-      <SafeAreaView
-        edges={["left", "right"]}
-        style={{ backgroundColor: THEME.background, flex: 1 }}
-        className="px-4"
-      >
-        <TransactionSkeleton />
-      </SafeAreaView>
-    );
-  }
-
-  /** Header content rendered above the transaction list (title + search + filters). */
-  const listHeader = useMemo(
+  /** Fixed top content (title + search + filters). */
+  const fixedTopContent = useMemo(
     () => (
       <>
         {/* Screen title */}
@@ -177,9 +223,10 @@ export default function TransactionScreen() {
         </View>
 
         {/* Search bar */}
-        <SearchTransaction
+        <SearchBar
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+          setSearchQuery={handleSearchQueryChange}
+          placeholder="Search transactions..."
         />
 
         {/* Category + amount filters */}
@@ -198,7 +245,7 @@ export default function TransactionScreen() {
     [
       THEME.textPrimary,
       searchQuery,
-      setSearchQuery,
+      handleSearchQueryChange,
       budgets,
       filterCategoryId,
       setFilterCategoryId,
@@ -222,12 +269,28 @@ export default function TransactionScreen() {
     [THEME.textSecondary],
   );
 
+  // Show skeleton loader during initial data fetch.
+  // This must remain after all hooks above so hook order never changes.
+  if (isInitialLoading) {
+    return (
+      <SafeAreaView
+        edges={["left", "right"]}
+        style={{ backgroundColor: THEME.background, flex: 1 }}
+        className="px-4"
+      >
+        <TransactionSkeleton />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView
       edges={["left", "right"]}
       style={{ backgroundColor: THEME.background, flex: 1 }}
       className="px-4"
     >
+      {fixedTopContent}
+
       <SectionList
         sections={sectionsWithTotals}
         keyExtractor={keyExtractor}
@@ -235,12 +298,11 @@ export default function TransactionScreen() {
         renderItem={renderItem as any}
         contentContainerStyle={{ paddingBottom: 120, paddingTop: 8 }}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={listHeader}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={isSearching ? false : refreshing}
             onRefresh={onRefresh}
             progressBackgroundColor={THEME.background}
             colors={[THEME.primary]}

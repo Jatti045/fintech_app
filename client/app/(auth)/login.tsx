@@ -28,7 +28,8 @@ import { forgotPassword } from "@/store/slices/userSlice";
 import ForgotPasswordModal from "@/components/login/ForgotPasswordModal";
 import OTPModal from "@/components/login/OTPModal";
 import ResetPasswordModal from "@/components/login/ResetPasswordModal";
-import apiClient from "@/config/apiClient";
+import { logger } from "@/utils/logger";
+// Removed direct apiClient usage. All authentication flows use userAPI and Redux actions.
 
 const { width, height } = Dimensions.get("window");
 const isSmallScreen = width < 380;
@@ -67,7 +68,7 @@ const LoginScreen = () => {
       }, 300);
       setPendingForgotEmail(null);
     }
-  }, [pendingForgotEmail, isModalVisible]);
+  }, [pendingForgotEmail, isModalVisible, showAlert]);
 
   const handleLogin = async () => {
     dispatch(clearLoginError());
@@ -82,17 +83,12 @@ const LoginScreen = () => {
 
       const normalizedEmail = email.trim().toLowerCase();
       // Dispatch login action
-      const response = await dispatch(
-        loginUser({ email: normalizedEmail, password }),
-      ).unwrap();
-
-      // Debugging log
-      console.log("Login response:", response);
+      await dispatch(loginUser({ email: normalizedEmail, password })).unwrap();
 
       // Navigate to tabs on successful login
       router.replace("/(tabs)");
     } catch (error) {
-      console.error("Login error:", error);
+      logger.warn("LoginScreen", "Login failed", error);
       // Error is already handled by Redux state, no need to set local error
       showAlert({
         title: "Login Failed",
@@ -235,6 +231,10 @@ const LoginScreen = () => {
                       autoComplete="password"
                     />
                     <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       onPress={() => setShowPassword(!showPassword)}
                       style={{
                         position: "absolute",
@@ -255,7 +255,11 @@ const LoginScreen = () => {
 
                 {/* Forgot Password */}
                 <View className="items-end mt-2">
-                  <TouchableOpacity onPress={() => setModalVisible(true)}>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Forgot password"
+                    onPress={() => setModalVisible(true)}
+                  >
                     <Text
                       style={{ color: THEME.secondary }}
                       className="text-sm font-medium"

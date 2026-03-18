@@ -6,6 +6,7 @@ import {
   useTransactionPagination,
   useTransactionStatus,
 } from "@/hooks/useRedux";
+import { PAGINATION_LIMIT } from "@/constants/appConfig";
 
 /**
  * Encapsulates the infinite-scroll "load more" logic for the transaction list.
@@ -23,31 +24,35 @@ export function useTransactionLoadMore() {
   /** Ref-based guard to prevent duplicate infinite-scroll dispatches. */
   const loadMoreRef = useRef(false);
 
-  const handleLoadMore = useCallback(() => {
-    if (loadMoreRef.current || isLoadingMore || !pagination.hasNextPage) return;
+  const handleLoadMore = useCallback(
+    (searchQuery: string = "") => {
+      if (loadMoreRef.current || isLoadingMore || !pagination.hasNextPage)
+        return;
 
-    loadMoreRef.current = true;
-    const nextPage = pagination.currentPage + 1;
+      loadMoreRef.current = true;
+      const nextPage = pagination.currentPage + 1;
 
-    dispatch(
-      fetchMoreTransactions({
-        searchQuery: "",
-        currentMonth: calendar.month,
-        currentYear: calendar.year,
-        page: nextPage,
-        limit: 10,
-      }),
-    ).finally(() => {
-      loadMoreRef.current = false;
-    });
-  }, [
-    isLoadingMore,
-    pagination.hasNextPage,
-    pagination.currentPage,
-    calendar.month,
-    calendar.year,
-    dispatch,
-  ]);
+      dispatch(
+        fetchMoreTransactions({
+          searchQuery,
+          currentMonth: calendar.month,
+          currentYear: calendar.year,
+          page: nextPage,
+          limit: PAGINATION_LIMIT,
+        }),
+      ).finally(() => {
+        loadMoreRef.current = false;
+      });
+    },
+    [
+      isLoadingMore,
+      pagination.hasNextPage,
+      pagination.currentPage,
+      calendar.month,
+      calendar.year,
+      dispatch,
+    ],
+  );
 
   return {
     handleLoadMore,

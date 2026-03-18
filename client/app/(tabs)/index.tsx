@@ -16,6 +16,7 @@ import MonthSelector from "@/components/home/MonthSelector";
 import SpentThisMonthCard from "@/components/home/SpentThisMonthCard";
 import QuickActions from "@/components/home/QuickActions";
 import BudgetSummary from "@/components/home/BudgetSummary";
+import GoalSummary from "@/components/home/GoalSummary";
 import RecentTransactions from "@/components/home/RecentTransactions";
 import TipOfTheDay from "@/components/home/TipOfTheDay";
 import BudgetHealthScore from "@/components/home/BudgetHealthScore";
@@ -26,16 +27,19 @@ import {
   useTransactions,
   useBudgets,
   useCalendar,
+  useUser,
   useTransactionMonthSummary,
   useTransactionStatus,
   useBudgetStatus,
 } from "@/hooks/useRedux";
+import { PAGINATION_LIMIT } from "@/constants/appConfig";
 
 export default function Index() {
   const { THEME } = useTheme();
   const { showAlert } = useThemedAlert();
   const transactions = useTransactions();
   const budgets = useBudgets();
+  const user = useUser();
   const calendar = useCalendar();
   const monthSummary = useTransactionMonthSummary();
   const dispatch = useAppDispatch();
@@ -63,7 +67,7 @@ export default function Index() {
             currentMonth: calendar.month,
             currentYear: calendar.year,
             page: 1,
-            limit: 10,
+            limit: PAGINATION_LIMIT,
             useCache: false,
           }),
         ),
@@ -103,6 +107,7 @@ export default function Index() {
   );
 
   const expenseTotal = monthSummary.totalAmount || 0;
+  const monthlyIncome = Number(user?.monthlyIncome || 0);
 
   /** Expense totals keyed by category — used by the TopCategoriesChart. */
   const categoryTotals: Record<string, number> = useMemo(() => {
@@ -174,6 +179,9 @@ export default function Index() {
         />
 
         {/* Card showing total spent this month, with currency-aware formatting */}
+        <SpentThisMonthCard title="Monthly Income" total={monthlyIncome} />
+
+        {/* Card showing total spent this month, with currency-aware formatting */}
         <SpentThisMonthCard total={expenseTotal} />
 
         {/* Quick action buttons for adding new transaction or budget */}
@@ -184,6 +192,9 @@ export default function Index() {
 
         {/* Budget summary cards with progress bars for each category */}
         <BudgetSummary />
+
+        {/* Goal summary cards with saved vs target progress */}
+        <GoalSummary />
 
         {/* Budget health score gauge (0–100) */}
         <BudgetHealthScore />
