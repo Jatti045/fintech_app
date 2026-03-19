@@ -36,6 +36,7 @@ import {
   GoalModal,
   NewGoalButton,
 } from "@/components/goal";
+import { BudgetSkeleton } from "@/components/skeleton/SkeletonLoader";
 import SearchBar from "@/components/global/SearchBar";
 
 export default function GoalsScreen() {
@@ -300,9 +301,7 @@ export default function GoalsScreen() {
         className="flex-1"
         style={{ backgroundColor: THEME.background }}
       >
-        <View className="flex-1 items-center justify-center">
-          <Text style={{ color: THEME.textSecondary }}>Loading goals...</Text>
-        </View>
+        <BudgetSkeleton />
       </SafeAreaView>
     );
   }
