@@ -14,6 +14,9 @@ import SwipeableRow from "@/components/global/SwipeableRow";
 /** Props for a single budget card. */
 export interface BudgetCardProps {
   budget: IBudget;
+  displayLimit?: number;
+  displaySpent?: number;
+  currencyCode?: string;
   onEdit: (budget: IBudget) => void;
   onDelete: (id: string) => void;
   surface: string;
@@ -35,6 +38,9 @@ export interface BudgetCardProps {
  */
 const BudgetCard = React.memo(function BudgetCard({
   budget,
+  displayLimit,
+  displaySpent,
+  currencyCode = "USD",
   onEdit,
   onDelete,
   surface,
@@ -46,8 +52,8 @@ const BudgetCard = React.memo(function BudgetCard({
   textSecondary,
   danger,
 }: BudgetCardProps) {
-  const limit = safeAmount(budget.limit);
-  const spent = safeAmount(budget.spent);
+  const limit = safeAmount(displayLimit ?? budget.limit);
+  const spent = safeAmount(displaySpent ?? budget.spent);
 
   /** Spend ratio clamped to [0, 1] for the progress bar width. */
   const ratio = limit > 0 ? Math.max(0, Math.min(1, spent / limit)) : 0;
@@ -97,14 +103,14 @@ const BudgetCard = React.memo(function BudgetCard({
                 style={{ color: textPrimary }}
                 className="text-2xl font-extrabold mt-1"
               >
-                {formatCurrency(limit)}
+                {formatCurrency(limit, currencyCode)}
               </Text>
               <View className="flex-row items-center mt-2">
                 <Text
                   style={{ color: overspent ? danger : textSecondary }}
                   className="text-sm"
                 >
-                  Spent {formatCurrency(spent)}
+                  Spent {formatCurrency(spent, currencyCode)}
                 </Text>
                 {overspent && (
                   <View
@@ -166,7 +172,10 @@ const BudgetCard = React.memo(function BudgetCard({
               <Feather name="alert-circle" size={18} color={danger} />
               <Text className="ml-2" style={{ color: danger }}>
                 You have exceeded this budget by{" "}
-                {formatCurrency(overspendDeltaCents(limit, spent))}
+                {formatCurrency(
+                  overspendDeltaCents(limit, spent),
+                  currencyCode,
+                )}
               </Text>
             </View>
           )}

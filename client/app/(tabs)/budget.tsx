@@ -7,6 +7,8 @@ import {
   useTheme,
   useBudgetStatus,
   useCalendar,
+  useTransactions,
+  useUser,
 } from "@/hooks/useRedux";
 import { useAppDispatch } from "@/store";
 import { fetchBudgets } from "@/store/slices/budgetSlice";
@@ -20,16 +22,25 @@ import { useBudgetOperations } from "@/hooks/budget/useBudgetOperation";
 import type { IBudget } from "@/types/budget/types";
 import { BudgetSkeleton } from "@/components/skeleton/SkeletonLoader";
 import SearchBar from "@/components/global/SearchBar";
+import { useBudgetDisplayAmounts } from "@/hooks/budget/useBudgetDisplayAmounts";
 
 // ─── Main Screen Component ──────────────────────────────────────────────────
 
 export default function BudgetScreen() {
   // ── Redux selectors ─────────────────────────────────────────────────────
   const budgets = useBudgets();
+  const transactions = useTransactions();
+  const user = useUser();
+  const activeCurrency = user?.currency || "USD";
   const { THEME } = useTheme();
   const { isLoading } = useBudgetStatus();
   const calendar = useCalendar();
   const dispatch = useAppDispatch();
+  const { displayBudgets } = useBudgetDisplayAmounts(
+    budgets,
+    transactions,
+    activeCurrency,
+  );
 
   // Only the delete handler is needed at screen level;
   // create + update are fully managed inside BudgetModal.
@@ -78,9 +89,11 @@ export default function BudgetScreen() {
   /** Budgets filtered by the search query (category name match). */
   const filteredBudgets = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return budgets;
-    return budgets.filter((b) => (b.category ?? "").toLowerCase().includes(q));
-  }, [budgets, searchQuery]);
+    if (!q) return displayBudgets;
+    return displayBudgets.filter((b) =>
+      (b.category ?? "").toLowerCase().includes(q),
+    );
+  }, [displayBudgets, searchQuery]);
 
   const hasBudgets = budgets && budgets.length > 0;
 
@@ -144,6 +157,13 @@ export default function BudgetScreen() {
               <BudgetCard
                 key={budget.id}
                 budget={budget}
+                displayLimit={Number(
+                  (budget as any).displayLimit ?? budget.limit,
+                )}
+                displaySpent={Number(
+                  (budget as any).displaySpent ?? budget.spent,
+                )}
+                currencyCode={(budget as any).displayCurrency || activeCurrency}
                 onEdit={handleEditPress}
                 onDelete={handleDeleteBudget}
                 surface={THEME.surface}

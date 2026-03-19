@@ -2,8 +2,14 @@ import React from "react";
 import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { formatCurrency } from "@/utils/helper";
-import { useBudgets, useTheme } from "@/hooks/useRedux";
+import {
+  useBudgets,
+  useTheme,
+  useTransactions,
+  useUser,
+} from "@/hooks/useRedux";
 import type { IBudget } from "@/types/budget/types";
+import { useBudgetDisplayAmounts } from "@/hooks/budget/useBudgetDisplayAmounts";
 
 /**
  * Compact list of up to 3 budgets for the month, each with a spend/limit
@@ -12,6 +18,14 @@ import type { IBudget } from "@/types/budget/types";
 export default function BudgetSummary() {
   const { THEME } = useTheme();
   const budgets = useBudgets();
+  const transactions = useTransactions();
+  const user = useUser();
+  const activeCurrency = user?.currency || "USD";
+  const { displayBudgets } = useBudgetDisplayAmounts(
+    budgets,
+    transactions,
+    activeCurrency,
+  );
   return (
     <View style={{ marginBottom: 16 }}>
       <Text
@@ -25,14 +39,14 @@ export default function BudgetSummary() {
         Budget Summary
       </Text>
 
-      {budgets.length === 0 ? (
+      {displayBudgets.length === 0 ? (
         <Text style={{ color: THEME.textSecondary }}>
           No budgets for this month.
         </Text>
       ) : (
-        budgets.slice(0, 3).map((b: any) => {
-          const spent = Number(b.spent || 0);
-          const limit = Number(b.limit || 0);
+        displayBudgets.slice(0, 3).map((b: any) => {
+          const spent = Number(b.displaySpent ?? b.spent ?? 0);
+          const limit = Number(b.displayLimit ?? b.limit ?? 0);
           const ratio = limit > 0 ? Math.max(0, Math.min(1, spent / limit)) : 0;
           const pct = Math.round(ratio * 100);
           const overspent = limit > 0 && spent > limit;
@@ -59,7 +73,8 @@ export default function BudgetSummary() {
                   {b.category}
                 </Text>
                 <Text style={{ color: THEME.textSecondary }}>
-                  {formatCurrency(spent)} / {formatCurrency(limit)}
+                  {formatCurrency(spent, activeCurrency)} /{" "}
+                  {formatCurrency(limit, activeCurrency)}
                 </Text>
               </View>
 

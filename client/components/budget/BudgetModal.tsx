@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useTheme } from "@/hooks/useRedux";
+import { useTheme, useUser } from "@/hooks/useRedux";
 import { useBudgetOperations } from "@/hooks/budget/useBudgetOperation";
 import {
   Modal,
@@ -14,6 +14,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Loader from "@/utils/loader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import IconSelectorModal from "./IconSelectorModal";
+import { getCurrencySymbol } from "@/constants/Currencies";
 
 function BudgetModal({
   openSheet,
@@ -27,6 +28,9 @@ function BudgetModal({
   onClose?: () => void;
 }) {
   const { THEME } = useTheme();
+  const user = useUser();
+  const currencyCode = (user?.currency || "USD").toUpperCase();
+  const currencySymbol = getCurrencySymbol(currencyCode);
 
   const {
     budgetCategory: category,
@@ -61,7 +65,7 @@ function BudgetModal({
   useEffect(() => {
     if (editingBudget) {
       setCategory(String(editingBudget.category ?? ""));
-      setLimit(String(editingBudget.limit ?? ""));
+      setLimit(String(editingBudget.displayLimit ?? editingBudget.limit ?? ""));
       setIcon(String(editingBudget.icon ?? ""));
     }
   }, [editingBudget]);
@@ -173,7 +177,7 @@ function BudgetModal({
               }}
             >
               <Text style={{ color: THEME.textSecondary, fontWeight: "600" }}>
-                $
+                {currencySymbol}
               </Text>
               <TextInput
                 value={limit}
@@ -229,11 +233,18 @@ function BudgetModal({
                       fontWeight: "600",
                     }}
                   >
-                    ${n}
+                    {currencySymbol}
+                    {n}
                   </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
+            <Text
+              style={{ color: THEME.textSecondary, marginTop: 2 }}
+              className="text-xs"
+            >
+              Amounts are saved in your default currency ({currencyCode}).
+            </Text>
           </View>
 
           <View className="mt-6">
