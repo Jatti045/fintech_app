@@ -24,14 +24,51 @@ const TransactionRow = React.memo(function TransactionRow({
 }) {
   const { THEME } = useTheme();
   const budgets = useBudgets();
-  const amt = safeAmount(tx.displayAmount ?? tx.amount);
-  const displayCurrency = tx.displayCurrency || tx.baseCurrency || "USD";
+  const displayCurrency = (
+    tx.displayCurrency ||
+    tx.baseCurrency ||
+    "USD"
+  ).toUpperCase();
+
+  const normalizedOriginalCurrency =
+    tx.originalCurrency?.toUpperCase() ||
+    tx.baseCurrency?.toUpperCase() ||
+    null;
+
+  const normalizedOriginalAmount =
+    tx.originalAmount != null ? Number(tx.originalAmount) : Number(tx.amount);
+
+  const shouldShowOriginalSpentCurrency =
+    normalizedOriginalCurrency != null &&
+    normalizedOriginalCurrency !== displayCurrency;
+
+  const amountToDisplay = safeAmount(
+    shouldShowOriginalSpentCurrency
+      ? normalizedOriginalAmount
+      : (tx.displayAmount ?? tx.amount),
+  );
+  const currencyToDisplay = shouldShowOriginalSpentCurrency
+    ? normalizedOriginalCurrency || displayCurrency
+    : displayCurrency;
 
   const originalReference = useMemo(() => {
-    if (tx.originalAmount == null || !tx.originalCurrency) return null;
-    if (tx.originalCurrency === displayCurrency) return null;
-    return `Orig ${formatCurrency(Number(tx.originalAmount), tx.originalCurrency)} (${tx.originalCurrency})`;
-  }, [tx.originalAmount, tx.originalCurrency, displayCurrency]);
+    if (shouldShowOriginalSpentCurrency) {
+      if (tx.displayAmount == null) return null;
+      if (displayCurrency === currencyToDisplay) return null;
+      return `≈ ${formatCurrency(Number(tx.displayAmount), displayCurrency)} (${displayCurrency})`;
+    }
+
+    if (tx.originalAmount == null || !normalizedOriginalCurrency) return null;
+    if (normalizedOriginalCurrency === displayCurrency) return null;
+    return `Orig ${formatCurrency(Number(tx.originalAmount), normalizedOriginalCurrency)} (${normalizedOriginalCurrency})`;
+  }, [
+    shouldShowOriginalSpentCurrency,
+    tx.displayAmount,
+    tx.originalAmount,
+    normalizedOriginalCurrency,
+    displayCurrency,
+    currencyToDisplay,
+  ]);
 
   const displayCategory = useMemo(() => {
     if (tx.budgetId) {
@@ -114,7 +151,7 @@ const TransactionRow = React.memo(function TransactionRow({
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            - {formatCurrency(amt, displayCurrency)}
+            - {formatCurrency(amountToDisplay, currencyToDisplay)}
           </Text>
         </View>
       </TouchableOpacity>

@@ -110,11 +110,14 @@ export const useBudgetOperations = () => {
       const parsedCategory = budgetCategory.trim();
       const parsedIcon = budgetIcon.trim();
       const parsedLimit = Number(budgetLimit);
+      const existingDisplayLimit = Number(
+        editingBudget.displayLimit ?? editingBudget.limit,
+      );
 
       // Detect no-op: skip API call if nothing has changed
       const noChange =
         parsedCategory === String(editingBudget.category) &&
-        Number(parsedLimit) === Number(editingBudget.limit) &&
+        Number(parsedLimit) === existingDisplayLimit &&
         parsedIcon === String(editingBudget.icon);
 
       if (noChange) {
@@ -130,7 +133,7 @@ export const useBudgetOperations = () => {
       if (parsedCategory !== String(editingBudget.category))
         updates.category = parsedCategory;
       if (parsedIcon !== String(editingBudget.icon)) updates.icon = parsedIcon;
-      if (Number(parsedLimit) !== Number(editingBudget.limit))
+      if (Number(parsedLimit) !== existingDisplayLimit)
         updates.limit = parsedLimit;
 
       setBudgetSaving(true);

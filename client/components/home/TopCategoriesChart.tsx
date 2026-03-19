@@ -2,7 +2,13 @@ import React, { useMemo } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { View, Text } from "react-native";
 import { formatCurrency } from "@/utils/helper";
-import { useBudgets, useTheme } from "@/hooks/useRedux";
+import {
+  useBudgets,
+  useTheme,
+  useTransactions,
+  useUser,
+} from "@/hooks/useRedux";
+import { useBudgetDisplayAmounts } from "@/hooks/budget/useBudgetDisplayAmounts";
 
 type Props = {
   label: string;
@@ -12,6 +18,14 @@ type Props = {
 export const TopCategoriesChart = React.memo(({ label, totals }: Props) => {
   const { THEME } = useTheme();
   const budgets = useBudgets();
+  const transactions = useTransactions();
+  const user = useUser();
+  const activeCurrency = user?.currency || "USD";
+  const { displayBudgets } = useBudgetDisplayAmounts(
+    budgets,
+    transactions,
+    activeCurrency,
+  );
 
   // Sort categories by total spent and take top 5
   const entries = Object.entries(totals).sort((a: any, b: any) => b[1] - a[1]);
@@ -20,12 +34,15 @@ export const TopCategoriesChart = React.memo(({ label, totals }: Props) => {
 
   const budgetLimitByCategory = useMemo(() => {
     const map = new Map<string, number>();
-    for (const b of budgets) {
+    for (const b of displayBudgets) {
       const key = String(b.category ?? "").toLowerCase();
-      map.set(key, (map.get(key) ?? 0) + Number(b.limit ?? 0));
+      map.set(
+        key,
+        (map.get(key) ?? 0) + Number((b as any).displayLimit ?? b.limit ?? 0),
+      );
     }
     return map;
-  }, [budgets]);
+  }, [displayBudgets]);
 
   // Helper: find total budget limit for a given category (case-insensitive match)
   const getBudgetLimitForCategory = (category: string) =>
@@ -85,7 +102,7 @@ export const TopCategoriesChart = React.memo(({ label, totals }: Props) => {
                     {cat}
                   </Text>
                   <Text style={{ color: THEME.textSecondary }}>
-                    {formatCurrency(spent)} • {pct}%
+                    {formatCurrency(spent, activeCurrency)} • {pct}%
                     {budgetLimit > 0 ? "" : " of spend"}
                   </Text>
                 </View>

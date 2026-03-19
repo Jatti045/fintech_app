@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { useAppDispatch } from "@/store";
@@ -22,6 +22,8 @@ import TipOfTheDay from "@/components/home/TipOfTheDay";
 import BudgetHealthScore from "@/components/home/BudgetHealthScore";
 import SpendingTrends from "@/components/home/SpendingTrends";
 import CategoryComparison from "@/components/home/CategoryComparison";
+import { useTransactionDisplayAmounts } from "@/hooks/transaction/useTransactionDisplayAmounts";
+import { convertCurrency } from "@/utils/currencyConverter";
 import {
   useTheme,
   useTransactions,
@@ -40,11 +42,19 @@ export default function Index() {
   const transactions = useTransactions();
   const budgets = useBudgets();
   const user = useUser();
+  const activeCurrency = user?.currency || "USD";
   const calendar = useCalendar();
   const monthSummary = useTransactionMonthSummary();
   const dispatch = useAppDispatch();
   const { isLoading: isTransactionsLoading } = useTransactionStatus();
   const { isLoading: isBudgetsLoading } = useBudgetStatus();
+  const { displayTransactions } = useTransactionDisplayAmounts(
+    transactions,
+    activeCurrency,
+  );
+  const [convertedExpenseTotal, setConvertedExpenseTotal] = useState(
+    Number(monthSummary.totalAmount || 0),
+  );
 
   /** Show skeleton while initial data is loading (both transactions and budgets empty + loading) */
   const isInitialLoading =
@@ -106,20 +116,82 @@ export default function Index() {
     [transactions],
   );
 
-  const expenseTotal = monthSummary.totalAmount || 0;
+  // Uses backend month summary (all month records), then converts it to the
+  // current default currency for display.
+  const expenseTotal = convertedExpenseTotal;
   const monthlyIncome = Number(user?.monthlyIncome || 0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const normalize = (v: string | null | undefined) =>
+      String(v || "")
+        .trim()
+        .toUpperCase();
+
+    const inferSourceCurrency = () => {
+      const counts = new Map<string, number>();
+
+      for (const tx of transactions as any[]) {
+        if ((tx?.type ?? "EXPENSE").toUpperCase() !== "EXPENSE") continue;
+        const c = normalize(tx?.baseCurrency || tx?.originalCurrency);
+        if (!c) continue;
+        counts.set(c, (counts.get(c) || 0) + 1);
+      }
+
+      let winner = "";
+      let max = 0;
+      for (const [currency, count] of counts.entries()) {
+        if (count > max) {
+          max = count;
+          winner = currency;
+        }
+      }
+
+      return winner || normalize(user?.currency) || "USD";
+    };
+
+    const run = async () => {
+      const rawTotal = Number(monthSummary.totalAmount || 0);
+      const toCurrency = normalize(activeCurrency) || "USD";
+      const fromCurrency = inferSourceCurrency();
+
+      if (!rawTotal || fromCurrency === toCurrency) {
+        if (!cancelled) setConvertedExpenseTotal(rawTotal);
+        return;
+      }
+
+      try {
+        const converted = await convertCurrency(
+          rawTotal,
+          fromCurrency,
+          toCurrency,
+        );
+        if (!cancelled) setConvertedExpenseTotal(Number(converted || 0));
+      } catch {
+        if (!cancelled) setConvertedExpenseTotal(rawTotal);
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [monthSummary.totalAmount, activeCurrency, transactions, user?.currency]);
 
   /** Expense totals keyed by category — used by the TopCategoriesChart. */
   const categoryTotals: Record<string, number> = useMemo(() => {
     const totals: Record<string, number> = {};
-    transactions.forEach((t: any) => {
+    displayTransactions.forEach((t: any) => {
       const cat = String(t.category || "Uncategorized");
       if ((t.type ?? "EXPENSE").toUpperCase() === "EXPENSE") {
-        totals[cat] = (totals[cat] || 0) + Number(t.amount || 0);
+        totals[cat] =
+          (totals[cat] || 0) + Number(t.displayAmount ?? t.amount ?? 0);
       }
     });
     return totals;
-  }, [transactions]);
+  }, [displayTransactions]);
 
   const now = new Date();
   const isCurrentMonth =
