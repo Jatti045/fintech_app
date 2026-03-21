@@ -33,6 +33,16 @@ class GoalAPI extends BaseAPI {
     });
   }
 
+  async deallocate(
+    goalId: string,
+    amount: number,
+  ): Promise<IApiResponse<IGoal>> {
+    return this.makeRequest<IGoal>(`/goal/${goalId}/deallocate`, {
+      method: "POST",
+      data: { amount },
+    });
+  }
+
   async delete(goalId: string): Promise<IApiResponse<string>> {
     return this.makeRequest<string>(`/goal/${goalId}`, {
       method: "DELETE",

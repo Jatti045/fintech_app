@@ -13,6 +13,7 @@ import {
 import {
   allocateToGoal,
   createGoal,
+  deallocateFromGoal,
   deleteGoal,
   fetchGoals,
   updateGoal,
@@ -25,6 +26,7 @@ import {
 import { PAGINATION_LIMIT } from "@/constants/appConfig";
 import {
   addGoalAllocationToCache,
+  removeGoalAllocationAmountFromCache,
   removeGoalAllocationsForGoalFromCache,
 } from "@/utils/cache";
 import type { IGoal } from "@/types/goal/types";
@@ -55,6 +57,9 @@ export default function GoalsScreen() {
   const [openAllocateModal, setOpenAllocateModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<IGoal | null>(null);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [allocationMode, setAllocationMode] = useState<
+    "allocate" | "deallocate"
+  >("allocate");
 
   const [goalName, setGoalName] = useState("");
   const [goalTarget, setGoalTarget] = useState("");
@@ -163,6 +168,14 @@ export default function GoalsScreen() {
   const openAllocate = useCallback((goal: IGoal) => {
     setSelectedGoalId(goal.id);
     setAllocateAmount("");
+    setAllocationMode("allocate");
+    setOpenAllocateModal(true);
+  }, []);
+
+  const openDeallocate = useCallback((goal: IGoal) => {
+    setSelectedGoalId(goal.id);
+    setAllocateAmount("");
+    setAllocationMode("deallocate");
     setOpenAllocateModal(true);
   }, []);
 
@@ -192,27 +205,54 @@ export default function GoalsScreen() {
       return;
     }
 
-    const result = await dispatch(
-      allocateToGoal({ goalId: selectedGoalId, amount }),
-    );
-    if (allocateToGoal.rejected.match(result)) {
+    const action =
+      allocationMode === "allocate"
+        ? allocateToGoal({ goalId: selectedGoalId, amount })
+        : deallocateFromGoal({ goalId: selectedGoalId, amount });
+
+    const result = await dispatch(action);
+    if (
+      allocateToGoal.rejected.match(result) ||
+      deallocateFromGoal.rejected.match(result)
+    ) {
       showAlert({
-        title: "Allocation failed",
-        message: String(result.payload || "Could not allocate to goal"),
+        title:
+          allocationMode === "allocate"
+            ? "Allocation failed"
+            : "Withdraw failed",
+        message: String(
+          result.payload ||
+            (allocationMode === "allocate"
+              ? "Could not allocate to goal"
+              : "Could not withdraw from goal"),
+        ),
       });
       return;
     }
 
-    // Immediate local UI update.
-    dispatch(addGoalAllocationSpent(amount));
+    if (allocationMode === "allocate") {
+      // Immediate local UI update.
+      dispatch(addGoalAllocationSpent(amount));
 
-    // Persist allocation amount for refresh fallback.
-    await addGoalAllocationToCache(
-      calendar.year,
-      calendar.month,
-      selectedGoalId,
-      amount,
-    );
+      // Persist allocation amount for refresh fallback.
+      await addGoalAllocationToCache(
+        calendar.year,
+        calendar.month,
+        selectedGoalId,
+        amount,
+      );
+    } else {
+      // Immediate local UI update for current month card.
+      dispatch(removeGoalAllocationSpent(amount));
+
+      // Best-effort cache correction used by month summary fallback.
+      await removeGoalAllocationAmountFromCache(
+        calendar.year,
+        calendar.month,
+        selectedGoalId,
+        amount,
+      );
+    }
 
     // Refresh monthly transaction summary from server (includes goal allocations).
     await dispatch(
@@ -229,6 +269,7 @@ export default function GoalsScreen() {
     handleAllocateModalClose();
   }, [
     allocateAmount,
+    allocationMode,
     calendar.month,
     calendar.year,
     dispatch,
@@ -354,6 +395,7 @@ export default function GoalsScreen() {
                 onEdit={openEditGoal}
                 onDelete={confirmDelete}
                 onAllocate={openAllocate}
+                onDeallocate={openDeallocate}
                 surface={THEME.surface}
                 border={THEME.border}
                 background={THEME.background}
@@ -407,6 +449,7 @@ export default function GoalsScreen() {
         setOpenSheet={handleSetAllocateModalOpen}
         allocateAmount={allocateAmount}
         setAllocateAmount={setAllocateAmount}
+        mode={allocationMode}
         onSubmit={submitAllocation}
         saving={isLoading}
       />

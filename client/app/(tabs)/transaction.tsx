@@ -44,11 +44,38 @@ export default function TransactionScreen() {
   const { isAdding, isEditing, isDeleting, isLoading } = useTransactionStatus();
   const calendar = useCalendar();
   const dispatch = useAppDispatch();
+
+  const { displayTransactions } = useTransactionDisplayAmounts(
+    transactions,
+    activeCurrency,
+  );
+
+  // Custom hook encapsulating all filter state + logic for deriving the filtered + grouped transaction data fed into the SectionList.
+  const {
+    filterCategoryId,
+    setFilterCategoryId,
+    minAmount,
+    setMinAmount,
+    maxAmount,
+    setMaxAmount,
+    clearFilters,
+    sectionsWithTotals,
+  } = useTransactionFilters(displayTransactions, budgets);
+
+  const selectedBudgetId = filterCategoryId !== "all" ? filterCategoryId : null;
+  const selectedMinAmount =
+    minAmount.trim() === "" ? null : Number(minAmount) || 0;
+  const selectedMaxAmount =
+    maxAmount.trim() === "" ? null : Number(maxAmount) || 0;
+
   const { searchQuery, setSearchQuery, normalizedQuery, refreshTransactions } =
     useTransactionSearch({
       currentMonth: calendar.month,
       currentYear: calendar.year,
       limit: PAGINATION_LIMIT,
+      budgetId: selectedBudgetId,
+      minAmount: selectedMinAmount,
+      maxAmount: selectedMaxAmount,
     });
   const isSearching = searchQuery.trim().length > 0;
   const [suppressInitialSkeleton, setSuppressInitialSkeleton] = useState(false);
@@ -86,11 +113,6 @@ export default function TransactionScreen() {
     }
   }, [isLoading]);
 
-  const { displayTransactions } = useTransactionDisplayAmounts(
-    transactions,
-    activeCurrency,
-  );
-
   // Use generic refresh hook
   const { refreshing, onRefresh } = useRefresh(() =>
     Promise.all([
@@ -107,18 +129,6 @@ export default function TransactionScreen() {
   // Only the delete handler is needed at screen level;
   // create + update are fully managed inside TransactionModal.
   const { handleDeleteTransaction } = useTransactionOperations();
-
-  // Custom hook encapsulating all filter state + logic for deriving the filtered + grouped transaction data fed into the SectionList.
-  const {
-    filterCategoryId,
-    setFilterCategoryId,
-    minAmount,
-    setMinAmount,
-    maxAmount,
-    setMaxAmount,
-    clearFilters,
-    sectionsWithTotals,
-  } = useTransactionFilters(displayTransactions, budgets);
 
   const { handleLoadMore, isLoadingMore, hasNextPage } =
     useTransactionLoadMore();
@@ -195,7 +205,14 @@ export default function TransactionScreen() {
         hasNextPage={hasNextPage}
         isLoadingMore={isSearching ? false : isLoadingMore}
         hasTransactions={transactions.length > 0}
-        onLoadMore={() => handleLoadMore(normalizedQuery)}
+        onLoadMore={() =>
+          handleLoadMore(
+            normalizedQuery,
+            selectedBudgetId,
+            selectedMinAmount,
+            selectedMaxAmount,
+          )
+        }
       />
     ),
     [
@@ -205,6 +222,9 @@ export default function TransactionScreen() {
       transactions.length,
       handleLoadMore,
       normalizedQuery,
+      selectedBudgetId,
+      selectedMinAmount,
+      selectedMaxAmount,
     ],
   );
 

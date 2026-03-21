@@ -109,6 +109,9 @@ export const fetchTransaction = createAsyncThunk(
       currentYear,
       startDate = null,
       endDate = null,
+      budgetId = null,
+      minAmount = null,
+      maxAmount = null,
       useCache = true,
       page = 1,
       limit = PAGINATION_LIMIT,
@@ -118,6 +121,9 @@ export const fetchTransaction = createAsyncThunk(
       currentYear: number;
       startDate?: string | null;
       endDate?: string | null;
+      budgetId?: string | null;
+      minAmount?: number | null;
+      maxAmount?: number | null;
       useCache?: boolean;
       page?: number;
       limit?: number;
@@ -125,6 +131,15 @@ export const fetchTransaction = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
+      const hasServerFilters =
+        Boolean(searchQuery?.trim()) ||
+        Boolean(startDate) ||
+        Boolean(endDate) ||
+        Boolean(budgetId) ||
+        minAmount != null ||
+        maxAmount != null;
+      const shouldCacheFirstPage = page === 1 && !hasServerFilters;
+
       // Disable cache when using pagination beyond first page
       if (page > 1 || !useCache) {
         const response = await transactionAPI.fetchAll({
@@ -133,12 +148,15 @@ export const fetchTransaction = createAsyncThunk(
           currentYear,
           startDate,
           endDate,
+          budgetId,
+          minAmount,
+          maxAmount,
           page,
           limit,
         });
 
         // persist to cache only for page 1 (overwrite month cache)
-        if (page === 1) {
+        if (shouldCacheFirstPage) {
           try {
             const toStore = response.data?.transaction ?? response.data ?? [];
             await setTransactionsCache(currentYear, currentMonth, toStore);
@@ -170,6 +188,7 @@ export const fetchTransaction = createAsyncThunk(
                   searchQuery: "",
                   currentMonth,
                   currentYear,
+                  budgetId: null,
                   page: 1,
                   limit,
                 });
@@ -214,20 +233,25 @@ export const fetchTransaction = createAsyncThunk(
         currentYear,
         startDate,
         endDate,
+        budgetId,
+        minAmount,
+        maxAmount,
         page,
         limit,
       });
 
       // persist to cache (overwrite month cache)
-      try {
-        const toStore = response.data?.transaction ?? response.data ?? [];
-        await setTransactionsCache(currentYear, currentMonth, toStore);
-      } catch (err) {
-        logger.warn(
-          "transactionSlice",
-          "Failed to persist transactions cache",
-          err,
-        );
+      if (shouldCacheFirstPage) {
+        try {
+          const toStore = response.data?.transaction ?? response.data ?? [];
+          await setTransactionsCache(currentYear, currentMonth, toStore);
+        } catch (err) {
+          logger.warn(
+            "transactionSlice",
+            "Failed to persist transactions cache",
+            err,
+          );
+        }
       }
 
       return withGoalAllocationFallback(
@@ -258,6 +282,9 @@ export const fetchMoreTransactions = createAsyncThunk(
       currentYear,
       startDate = null,
       endDate = null,
+      budgetId = null,
+      minAmount = null,
+      maxAmount = null,
       page = 1,
       limit = PAGINATION_LIMIT,
     }: {
@@ -266,6 +293,9 @@ export const fetchMoreTransactions = createAsyncThunk(
       currentYear: number;
       startDate?: string | null;
       endDate?: string | null;
+      budgetId?: string | null;
+      minAmount?: number | null;
+      maxAmount?: number | null;
       page?: number;
       limit?: number;
     },
@@ -278,6 +308,9 @@ export const fetchMoreTransactions = createAsyncThunk(
         currentYear,
         startDate,
         endDate,
+        budgetId,
+        minAmount,
+        maxAmount,
         page,
         limit,
       });

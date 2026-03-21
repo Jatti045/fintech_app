@@ -347,7 +347,7 @@ export function useProfile(): UseProfileReturn {
       buttons: [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Delete Account",
+          text: "Delete",
           style: "destructive",
           onPress: () => {
             setTimeout(() => {
@@ -358,7 +358,7 @@ export function useProfile(): UseProfileReturn {
                 buttons: [
                   { text: "Cancel", style: "cancel" },
                   {
-                    text: "Delete Account",
+                    text: "Delete",
                     style: "destructive",
                     onPress: async () => {
                       if (!user?.id) return;

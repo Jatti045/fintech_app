@@ -62,6 +62,21 @@ export const allocateToGoal = createAsyncThunk(
   },
 );
 
+export const deallocateFromGoal = createAsyncThunk(
+  "goal/deallocate",
+  async (
+    { goalId, amount }: { goalId: string; amount: number },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await goalAPI.deallocate(goalId, amount);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Failed to deallocate from goal");
+    }
+  },
+);
+
 export const deleteGoal = createAsyncThunk(
   "goal/deleteGoal",
   async (goalId: string, { rejectWithValue }) => {
@@ -131,6 +146,21 @@ const goalSlice = createSlice({
         );
       })
       .addCase(allocateToGoal.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(deallocateFromGoal.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deallocateFromGoal.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated = action.payload;
+        state.goals = state.goals.map((g) =>
+          g.id === updated.id ? updated : g,
+        );
+      })
+      .addCase(deallocateFromGoal.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

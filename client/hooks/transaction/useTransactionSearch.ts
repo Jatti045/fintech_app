@@ -6,6 +6,9 @@ type UseTransactionSearchParams = {
   currentMonth: number;
   currentYear: number;
   limit: number;
+  budgetId?: string | null;
+  minAmount?: number | null;
+  maxAmount?: number | null;
 };
 
 /**
@@ -19,6 +22,9 @@ export function useTransactionSearch({
   currentMonth,
   currentYear,
   limit,
+  budgetId,
+  minAmount,
+  maxAmount,
 }: UseTransactionSearchParams) {
   const dispatch = useAppDispatch();
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,13 +39,24 @@ export function useTransactionSearch({
           searchQuery: query,
           currentMonth,
           currentYear,
+          budgetId,
+          minAmount,
+          maxAmount,
           page: 1,
           limit,
           useCache: false,
         }),
       );
     },
-    [dispatch, currentMonth, currentYear, limit],
+    [
+      dispatch,
+      currentMonth,
+      currentYear,
+      budgetId,
+      minAmount,
+      maxAmount,
+      limit,
+    ],
   );
 
   useEffect(() => {

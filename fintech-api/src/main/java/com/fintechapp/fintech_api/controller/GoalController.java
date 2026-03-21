@@ -61,6 +61,14 @@ public class GoalController {
         return goalService.allocateToGoal(authenticatedUser, goalId, request);
     }
 
+    @PostMapping("/{goalId}/deallocate")
+    public GoalDataResponse deallocateFromGoal(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @PathVariable String goalId,
+            @Valid @RequestBody AllocateGoalRequest request) {
+        return goalService.deallocateFromGoal(authenticatedUser, goalId, request);
+    }
+
     @DeleteMapping("/{goalId}")
     public GoalIdResponse deleteGoal(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
