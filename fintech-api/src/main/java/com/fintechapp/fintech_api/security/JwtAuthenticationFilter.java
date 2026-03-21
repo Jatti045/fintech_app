@@ -30,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private static final String BEARER_PREFIX = "Bearer ";
 	private static final Set<String> PUBLIC_PATHS = Set.of(
 			"/error",
+			"/api/health",
 			"/api/auth/login",
 			"/api/auth/register",
 			"/api/auth/signup",
