@@ -25,7 +25,12 @@ export function useTransactionLoadMore() {
   const loadMoreRef = useRef(false);
 
   const handleLoadMore = useCallback(
-    (searchQuery: string = "") => {
+    (
+      searchQuery: string = "",
+      budgetId: string | null = null,
+      minAmount: number | null = null,
+      maxAmount: number | null = null,
+    ) => {
       if (loadMoreRef.current || isLoadingMore || !pagination.hasNextPage)
         return;
 
@@ -37,6 +42,9 @@ export function useTransactionLoadMore() {
           searchQuery,
           currentMonth: calendar.month,
           currentYear: calendar.year,
+          budgetId,
+          minAmount,
+          maxAmount,
           page: nextPage,
           limit: PAGINATION_LIMIT,
         }),

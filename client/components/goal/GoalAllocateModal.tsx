@@ -17,6 +17,7 @@ interface GoalAllocateModalProps {
   setOpenSheet: (open: boolean) => void;
   allocateAmount: string;
   setAllocateAmount: (val: string) => void;
+  mode: "allocate" | "deallocate";
   onSubmit: () => void;
   saving: boolean;
 }
@@ -26,10 +27,20 @@ function GoalAllocateModal({
   setOpenSheet,
   allocateAmount,
   setAllocateAmount,
+  mode,
   onSubmit,
   saving,
 }: GoalAllocateModalProps) {
   const { THEME } = useTheme();
+  const isAllocate = mode === "allocate";
+  const title = isAllocate ? "Allocate to Goal" : "Withdraw from Goal";
+  const buttonText = isAllocate
+    ? saving
+      ? "Allocating..."
+      : "Allocate"
+    : saving
+      ? "Withdrawing..."
+      : "Withdraw";
 
   return (
     <Modal
@@ -54,7 +65,7 @@ function GoalAllocateModal({
             style={{ color: THEME.textPrimary }}
             className="text-lg text-center font-bold"
           >
-            Allocate to Goal
+            {title}
           </Text>
         </View>
 
@@ -97,7 +108,11 @@ function GoalAllocateModal({
           </View>
 
           <View className="mt-6">
-            <TouchableOpacity activeOpacity={0.9} onPress={onSubmit}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={onSubmit}
+              disabled={saving}
+            >
               <LinearGradient
                 colors={[THEME.primary, THEME.secondary]}
                 start={[0, 0]}
@@ -106,10 +121,11 @@ function GoalAllocateModal({
                   paddingVertical: 14,
                   borderRadius: 10,
                   alignItems: "center",
+                  opacity: saving ? 0.8 : 1,
                 }}
               >
                 <Text style={{ color: THEME.textPrimary, fontWeight: "700" }}>
-                  {saving ? "Allocating..." : "Allocate"}
+                  {buttonText}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

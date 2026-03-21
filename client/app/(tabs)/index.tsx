@@ -18,10 +18,7 @@ import QuickActions from "@/components/home/QuickActions";
 import BudgetSummary from "@/components/home/BudgetSummary";
 import GoalSummary from "@/components/home/GoalSummary";
 import RecentTransactions from "@/components/home/RecentTransactions";
-import TipOfTheDay from "@/components/home/TipOfTheDay";
 import BudgetHealthScore from "@/components/home/BudgetHealthScore";
-import SpendingTrends from "@/components/home/SpendingTrends";
-import CategoryComparison from "@/components/home/CategoryComparison";
 import { useTransactionDisplayAmounts } from "@/hooks/transaction/useTransactionDisplayAmounts";
 import { convertCurrency } from "@/utils/currencyConverter";
 import {
@@ -274,17 +271,8 @@ export default function Index() {
         {/* Chart showing top spending categories for the month, with bars colored by budget ratio */}
         <TopCategoriesChart label="Top Categories" totals={categoryTotals} />
 
-        {/* Category spend vs. last month comparison */}
-        <CategoryComparison categoryTotals={categoryTotals} />
-
-        {/* Bar chart showing spending totals for the last 6 months */}
-        <SpendingTrends />
-
         {/* List of 5 most recent transactions across all months */}
         <RecentTransactions transactions={recentTransactions} />
-
-        {/* Static tip of the day with financial advice */}
-        <TipOfTheDay />
 
         {/* Extra spacing at bottom to ensure last item isn't cut off */}
         <View style={{ height: 80 }} />

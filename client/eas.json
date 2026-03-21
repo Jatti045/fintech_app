@@ -2,7 +2,7 @@
   "build": {
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://budgettracker-api.vercel.app/api"
+        "EXPO_PUBLIC_API_BASE_URL": "https://fintech-app-bm4c.onrender.com/api"
       },
       "android": {
         "buildType": "app-bundle"

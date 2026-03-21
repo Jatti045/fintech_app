@@ -164,6 +164,44 @@ public class GoalService {
     }
 
     @Transactional
+    public GoalDataResponse deallocateFromGoal(
+            AuthenticatedUser authenticatedUser,
+            String goalId,
+            AllocateGoalRequest request) {
+        String userId = requireUserId(authenticatedUser);
+        if (!StringUtils.hasText(goalId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "goalId is required");
+        }
+
+        if (request == null || request.amount() == null || request.amount() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "amount must be a positive number");
+        }
+
+        Goal existing = goalRepository.findByIdAndUser_Id(goalId, userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Goal not found or doesn't belong to user"));
+
+        if (request.amount() > existing.getProgress()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Deallocation amount cannot exceed current goal progress");
+        }
+
+        existing.setProgress(existing.getProgress() - request.amount());
+
+        GoalAllocation allocation = new GoalAllocation();
+        allocation.setUser(existing.getUser());
+        allocation.setGoal(existing);
+        allocation.setAmount(-request.amount());
+        allocation.setAllocatedAt(Instant.now());
+        goalAllocationRepository.save(allocation);
+
+        Goal updated = goalRepository.save(existing);
+        return new GoalDataResponse(true, "Deallocation added successfully", toGoalItem(updated));
+    }
+
+    @Transactional
     public GoalIdResponse deleteGoal(AuthenticatedUser authenticatedUser, String goalId) {
         String userId = requireUserId(authenticatedUser);
 

@@ -186,12 +186,10 @@ function InformationModal({
               Home Insights
             </Text>
             <Text style={{ color: THEME.textSecondary, marginBottom: 12 }}>
-              The home screen features three analytics cards:{"\n"}• Budget
-              Health Score — a quick gauge of how well you're staying within
-              your budgets for the selected month.{"\n"}• Spending Trends — a
-              bar chart comparing your spending over the last few months.{"\n"}•
-              Category Comparison — a visual breakdown showing which categories
-              consume the most of your budget.
+              The home screen features analytics cards such as Budget Health
+              Score — a quick gauge of how well you're staying within your
+              budgets for the selected month — and Top Categories, which shows
+              where most of your spending is going.
             </Text>
 
             <Text

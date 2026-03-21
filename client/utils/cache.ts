@@ -406,6 +406,78 @@ export async function addGoalAllocationToCache(
   }
 }
 
+export async function removeGoalAllocationAmountFromCache(
+  year: number,
+  month: number,
+  goalId: string,
+  amount: number,
+  userId?: string,
+): Promise<number> {
+  try {
+    const decrementBy = Number(amount || 0);
+    if (!goalId || !goalId.trim()) return 0;
+    if (!Number.isFinite(decrementBy) || decrementBy <= 0) return 0;
+
+    const uid = userId ?? (await getStoredUserId());
+    if (!uid) return 0;
+
+    const key = goalAllocationsKey(uid, year, month);
+    const raw = await AsyncStorage.getItem(key);
+    const parsed = unwrap(raw);
+
+    // Legacy numeric format: best-effort decrement total.
+    if (typeof parsed === "number") {
+      const current = Number(parsed || 0);
+      const removed = Math.min(current, decrementBy);
+      const next = Math.max(0, current - removed);
+      if (next > 0) {
+        await AsyncStorage.setItem(key, wrap(next));
+      } else {
+        await AsyncStorage.removeItem(key);
+      }
+      return Math.round(removed * 100) / 100;
+    }
+
+    const entries = Array.isArray(parsed)
+      ? ([...parsed] as GoalAllocationCacheItem[])
+      : [];
+
+    if (entries.length === 0) return 0;
+
+    const normalizedGoalId = goalId.trim();
+    let remainingToRemove = decrementBy;
+
+    // Remove from newest entries first for this goal.
+    for (let i = entries.length - 1; i >= 0; i -= 1) {
+      const entry = entries[i];
+      if (entry.goalId !== normalizedGoalId) continue;
+      const entryAmount = Number(entry.amount || 0);
+      if (entryAmount <= 0) continue;
+      if (remainingToRemove <= 0) break;
+
+      const deduct = Math.min(entryAmount, remainingToRemove);
+      entry.amount = Math.round((entryAmount - deduct) * 100) / 100;
+      remainingToRemove = Math.round((remainingToRemove - deduct) * 100) / 100;
+    }
+
+    const updatedEntries = entries.filter(
+      (entry) => Number(entry.amount || 0) > 0,
+    );
+
+    if (updatedEntries.length === 0) {
+      await AsyncStorage.removeItem(key);
+    } else {
+      await AsyncStorage.setItem(key, wrap(updatedEntries));
+    }
+
+    const removed = Math.max(0, decrementBy - remainingToRemove);
+    return Math.round(removed * 100) / 100;
+  } catch (e) {
+    logger.warn("cache", "Failed decrementing goal allocation cache", e);
+    return 0;
+  }
+}
+
 export async function removeGoalAllocationsForGoalFromCache(
   goalId: string,
   currentYear?: number,

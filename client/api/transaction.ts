@@ -24,6 +24,8 @@ class TransactionAPI extends BaseAPI {
     startDate,
     endDate,
     budgetId,
+    minAmount,
+    maxAmount,
     page = 1,
     limit = PAGINATION_LIMIT,
   }: {
@@ -33,6 +35,8 @@ class TransactionAPI extends BaseAPI {
     startDate?: string | null;
     endDate?: string | null;
     budgetId?: string | null;
+    minAmount?: number | null;
+    maxAmount?: number | null;
     page?: number;
     limit?: number;
   }): Promise<ITransactionResponse<ITransaction[]>> {
@@ -42,6 +46,8 @@ class TransactionAPI extends BaseAPI {
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
     if (budgetId) params.budgetId = budgetId;
+    if (minAmount != null) params.minAmount = minAmount;
+    if (maxAmount != null) params.maxAmount = maxAmount;
     return this.makeRequest("/transaction", {
       method: "GET",
       params,

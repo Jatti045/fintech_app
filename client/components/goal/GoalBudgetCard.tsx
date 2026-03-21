@@ -13,6 +13,7 @@ export interface GoalBudgetCardProps {
   onEdit: (goal: IGoal) => void;
   onDelete: (goal: IGoal) => void;
   onAllocate: (goal: IGoal) => void;
+  onDeallocate: (goal: IGoal) => void;
   surface: string;
   border: string;
   background: string;
@@ -29,6 +30,7 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
   onEdit,
   onDelete,
   onAllocate,
+  onDeallocate,
   surface,
   border,
   background,
@@ -147,20 +149,40 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
               Remaining {formatCurrency(Math.max(remaining, 0), currency)}
             </Text>
 
-            <TouchableOpacity
-              onPress={() => onAllocate(goal)}
-              activeOpacity={0.9}
-              style={{
-                backgroundColor: primary,
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 10,
-              }}
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
             >
-              <Text style={{ color: textPrimary, fontWeight: "700" }}>
-                Allocate
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => onDeallocate(goal)}
+                activeOpacity={0.9}
+                style={{
+                  borderColor: primary,
+                  borderWidth: 1,
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 10,
+                }}
+              >
+                <Text style={{ color: primary, fontWeight: "700" }}>
+                  Withdraw
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => onAllocate(goal)}
+                activeOpacity={0.9}
+                style={{
+                  backgroundColor: primary,
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 10,
+                }}
+              >
+                <Text style={{ color: textPrimary, fontWeight: "700" }}>
+                  Allocate
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
