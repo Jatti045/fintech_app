@@ -81,6 +81,13 @@ export default function TransactionScreen() {
   const [suppressInitialSkeleton, setSuppressInitialSkeleton] = useState(false);
   const clearSearchWaitingForLoadRef = useRef(false);
   const clearSearchSawLoadingRef = useRef(false);
+  const [isFilteringRef, setIsFilteringRef] = useState(false);
+  const previousFiltersRef = useRef({
+    query: "",
+    budgetId: selectedBudgetId,
+    minAmount: selectedMinAmount,
+    maxAmount: selectedMaxAmount,
+  });
 
   const handleSearchQueryChange = useCallback(
     (nextQuery: string) => {
@@ -112,6 +119,33 @@ export default function TransactionScreen() {
       setSuppressInitialSkeleton(false);
     }
   }, [isLoading]);
+
+  // Track filter changes and show loader while filtering is in progress
+  useEffect(() => {
+    const filtersChanged =
+      normalizedQuery !== previousFiltersRef.current.query ||
+      selectedBudgetId !== previousFiltersRef.current.budgetId ||
+      selectedMinAmount !== previousFiltersRef.current.minAmount ||
+      selectedMaxAmount !== previousFiltersRef.current.maxAmount;
+
+    if (filtersChanged) {
+      setIsFilteringRef(true);
+    }
+
+    previousFiltersRef.current = {
+      query: normalizedQuery,
+      budgetId: selectedBudgetId,
+      minAmount: selectedMinAmount,
+      maxAmount: selectedMaxAmount,
+    };
+  }, [normalizedQuery, selectedBudgetId, selectedMinAmount, selectedMaxAmount]);
+
+  // Stop showing the filtering loader when transactions have finished loading
+  useEffect(() => {
+    if (!isLoading && isFilteringRef) {
+      setIsFilteringRef(false);
+    }
+  }, [isLoading, isFilteringRef]);
 
   // Use generic refresh hook
   const { refreshing, onRefresh } = useRefresh(() =>
@@ -148,10 +182,11 @@ export default function TransactionScreen() {
     if (isAdding) return "Adding transaction…";
     if (isEditing) return "Updating transaction…";
     if (isDeleting) return "Deleting transaction…";
+    if (isFilteringRef) return "Filtering transactions…";
     return "";
-  }, [isAdding, isEditing, isDeleting]);
+  }, [isAdding, isEditing, isDeleting, isFilteringRef]);
 
-  const isLoaderVisible = isAdding || isEditing || isDeleting;
+  const isLoaderVisible = isAdding || isEditing || isDeleting || isFilteringRef;
 
   /** Open the modal in edit mode for the given transaction. */
   const handleEditPress = useCallback((tx: TransactionItem) => {
