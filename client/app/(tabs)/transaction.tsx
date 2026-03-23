@@ -81,7 +81,9 @@ export default function TransactionScreen() {
   const [suppressInitialSkeleton, setSuppressInitialSkeleton] = useState(false);
   const clearSearchWaitingForLoadRef = useRef(false);
   const clearSearchSawLoadingRef = useRef(false);
-  const [isFilteringRef, setIsFilteringRef] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const filterWaitingForLoadRef = useRef(false);
+  const filterSawLoadingRef = useRef(false);
   const previousFiltersRef = useRef({
     query: "",
     budgetId: selectedBudgetId,
@@ -129,7 +131,9 @@ export default function TransactionScreen() {
       selectedMaxAmount !== previousFiltersRef.current.maxAmount;
 
     if (filtersChanged) {
-      setIsFilteringRef(true);
+      setIsFiltering(true);
+      filterWaitingForLoadRef.current = true;
+      filterSawLoadingRef.current = isLoading;
     }
 
     previousFiltersRef.current = {
@@ -138,14 +142,34 @@ export default function TransactionScreen() {
       minAmount: selectedMinAmount,
       maxAmount: selectedMaxAmount,
     };
-  }, [normalizedQuery, selectedBudgetId, selectedMinAmount, selectedMaxAmount]);
+  }, [
+    normalizedQuery,
+    selectedBudgetId,
+    selectedMinAmount,
+    selectedMaxAmount,
+    isLoading,
+  ]);
 
-  // Stop showing the filtering loader when transactions have finished loading
+  // Keep filtering loader visible until fetch starts and the filtered
+  // response has been applied to the UI.
   useEffect(() => {
-    if (!isLoading && isFilteringRef) {
-      setIsFilteringRef(false);
+    if (!filterWaitingForLoadRef.current) return;
+
+    if (isLoading) {
+      filterSawLoadingRef.current = true;
+      return;
     }
-  }, [isLoading, isFilteringRef]);
+
+    if (!filterSawLoadingRef.current) return;
+
+    const frame = requestAnimationFrame(() => {
+      filterWaitingForLoadRef.current = false;
+      filterSawLoadingRef.current = false;
+      setIsFiltering(false);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [isLoading, sectionsWithTotals]);
 
   // Use generic refresh hook
   const { refreshing, onRefresh } = useRefresh(() =>
@@ -182,11 +206,11 @@ export default function TransactionScreen() {
     if (isAdding) return "Adding transaction…";
     if (isEditing) return "Updating transaction…";
     if (isDeleting) return "Deleting transaction…";
-    if (isFilteringRef) return "Filtering transactions…";
+    if (isFiltering) return "Filtering transactions…";
     return "";
-  }, [isAdding, isEditing, isDeleting, isFilteringRef]);
+  }, [isAdding, isEditing, isDeleting, isFiltering]);
 
-  const isLoaderVisible = isAdding || isEditing || isDeleting || isFilteringRef;
+  const isLoaderVisible = isAdding || isEditing || isDeleting || isFiltering;
 
   /** Open the modal in edit mode for the given transaction. */
   const handleEditPress = useCallback((tx: TransactionItem) => {
