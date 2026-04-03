@@ -15,7 +15,7 @@ class HealthControllerIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("API is healthy."));
+                .andExpect(jsonPath("$.message").value("API is healthy. Database connection is functional."));
     }
 }
 
