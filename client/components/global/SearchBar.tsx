@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { TextInput, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "@/hooks/useRedux";
@@ -11,10 +11,8 @@ type Props = {
 };
 
 /**
- * Reusable search bar used on the Transaction, Budget, and Goals screens.
- *
- * Previously near-identical wrapper components existed.
- * This shared component keeps search UI/behavior in one place.
+ * Modern search bar with enhanced visual design and smooth interactions.
+ * Used on the Transaction, Budget, and Goals screens.
  */
 export default function SearchBar({
   searchQuery,
@@ -22,32 +20,51 @@ export default function SearchBar({
   placeholder = "Search...",
 }: Props) {
   const { THEME } = useTheme();
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
-    <View className="mb-4 flex-row items-center justify-between">
-      <TextInput
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder={placeholder}
-        className="py-4 pl-12 rounded-full px-4 flex-1"
+    <View className="mb-4 flex-row items-center">
+      <View
         style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "center",
           backgroundColor: THEME.inputBackground,
-          color: THEME.textPrimary,
+          borderRadius: 14,
+          borderWidth: 2,
+          borderColor: isFocused ? THEME.primary : THEME.border,
+          paddingHorizontal: 12,
+          transition: "border-color 0.2s ease-in-out",
         }}
-        placeholderTextColor={THEME.placeholderText}
-      />
-      <Feather
-        className="absolute ml-4"
-        name="search"
-        size={20}
-        color={THEME.placeholderText}
-      />
-      <TouchableOpacity
-        className="absolute right-4 rounded-full p-2"
-        onPress={() => setSearchQuery("")}
-        activeOpacity={0.7}
       >
-        <Feather name="x" size={20} color={THEME.placeholderText} />
-      </TouchableOpacity>
+        <Feather
+          name="search"
+          size={20}
+          color={isFocused ? THEME.primary : THEME.placeholderText}
+          style={{ marginRight: 8 }}
+        />
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder={placeholder}
+          className="py-3 flex-1 text-base"
+          style={{
+            color: THEME.textPrimary,
+          }}
+          placeholderTextColor={THEME.placeholderText}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            className="p-2 rounded-full ml-2"
+            onPress={() => setSearchQuery("")}
+            activeOpacity={0.6}
+          >
+            <Feather name="x-circle" size={18} color={THEME.textSecondary} />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 }

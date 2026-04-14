@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, FlatList, Modal } from "react-native";
+import { getModalHeight, MODAL_BORDER_RADIUS } from "@/constants/appConfig";
 import { Ionicons } from "@expo/vector-icons";
 
 import { CURRENCIES, DEFAULT_CURRENCY } from "@/constants/Currencies";
@@ -17,6 +18,8 @@ export default function CurrencyPickerModal({
 }: CurrencyPickerModalProps) {
   if (!visible) return null;
 
+  const modalHeight = getModalHeight();
+
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View
@@ -29,9 +32,9 @@ export default function CurrencyPickerModal({
         <View
           style={{
             backgroundColor: THEME.background,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            maxHeight: "70%",
+            borderTopLeftRadius: MODAL_BORDER_RADIUS,
+            borderTopRightRadius: MODAL_BORDER_RADIUS,
+            height: modalHeight,
             paddingBottom: 30,
           }}
         >
