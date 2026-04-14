@@ -273,7 +273,7 @@ export default function Index() {
         <TopCategoriesChart label="Top Categories" totals={categoryTotals} />
 
         {/* List of 5 most recent transactions across all months */}
-        <RecentTransactions transactions={recentTransactions} />
+        {/* <RecentTransactions transactions={recentTransactions} /> */}
 
         {/* Extra spacing at bottom to ensure last item isn't cut off */}
         <View style={{ height: 80 }} />

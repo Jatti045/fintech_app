@@ -46,7 +46,7 @@ export default function TabsLayout() {
           backgroundColor: THEME.inputBackground,
           borderTopColor: THEME.border,
         },
-        tabBarActiveTintColor: THEME.textPrimary,
+        tabBarActiveTintColor: THEME.primary,
         tabBarInactiveTintColor: THEME.textSecondary,
       }}
     >
