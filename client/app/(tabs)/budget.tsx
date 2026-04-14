@@ -17,6 +17,7 @@ import {
   BudgetModal,
   EmptyBudgetState,
   NewBudgetButton,
+  BudgetOverviewHeader,
 } from "@/components/budget";
 import { useBudgetOperations } from "@/hooks/budget/useBudgetOperation";
 import type { IBudget } from "@/types/budget/types";
@@ -140,7 +141,11 @@ export default function BudgetScreen() {
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16 }}
+        contentContainerStyle={{
+          paddingBottom: 120,
+          paddingHorizontal: 16,
+          paddingTop: 12,
+        }}
         refreshControl={
           <RefreshControl
             refreshing={isSearching ? false : refreshing}
@@ -150,6 +155,8 @@ export default function BudgetScreen() {
           />
         }
       >
+        {/* Budget overview header */}
+        <BudgetOverviewHeader />
         {/* Budget cards or empty state */}
         {hasBudgets ? (
           filteredBudgets.length > 0 ? (

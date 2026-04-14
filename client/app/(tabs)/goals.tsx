@@ -37,6 +37,7 @@ import {
   GoalBudgetCard,
   GoalModal,
   NewGoalButton,
+  GoalOverviewHeader,
 } from "@/components/goal";
 import { BudgetSkeleton } from "@/components/skeleton/SkeletonLoader";
 import SearchBar from "@/components/global/SearchBar";
@@ -375,7 +376,11 @@ export default function GoalsScreen() {
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16 }}
+        contentContainerStyle={{
+          paddingBottom: 120,
+          paddingHorizontal: 16,
+          paddingTop: 12,
+        }}
         refreshControl={
           <RefreshControl
             refreshing={isSearching ? false : refreshing}
@@ -385,6 +390,8 @@ export default function GoalsScreen() {
           />
         }
       >
+        {/* Goal overview header */}
+        <GoalOverviewHeader />
         {hasGoals ? (
           filteredGoals.length > 0 ? (
             filteredGoals.map((goal) => (
