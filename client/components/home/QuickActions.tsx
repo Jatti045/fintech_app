@@ -1,7 +1,6 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Platform } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/hooks/useRedux";
 
 type Props = {
@@ -11,8 +10,8 @@ type Props = {
 };
 
 /**
- * Modern quick actions component with gradient buttons and enhanced visual design.
- * Provides shortcuts for the most common actions: add transaction / add budget.
+ * Quick actions component providing shortcuts for the most common actions:
+ * add transaction / add budget.
  */
 export default function QuickActions({ onNewTransaction, onNewBudget }: Props) {
   const { THEME } = useTheme();
@@ -40,148 +39,104 @@ export default function QuickActions({ onNewTransaction, onNewBudget }: Props) {
       <View style={{ flexDirection: "row", gap: 12 }}>
         {/* New Transaction Button */}
         <TouchableOpacity
-          style={{ flex: 1 }}
+          style={{
+            flex: 1,
+            backgroundColor: THEME.surface,
+            borderRadius: 16,
+            padding: 16,
+            alignItems: "center",
+            borderColor: THEME.border,
+            borderWidth: 1,
+          }}
           onPress={onNewTransaction}
-          activeOpacity={0.85}
+          activeOpacity={0.7}
         >
-          <LinearGradient
-            colors={[THEME.primary, THEME.secondary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+          <View
             style={{
-              borderRadius: 16,
-              padding: 20,
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              backgroundColor: `${THEME.primary}20`,
+              justifyContent: "center",
               alignItems: "center",
-              overflow: "hidden",
+              marginBottom: 10,
             }}
           >
-            {/* Background decorative element */}
-            <View
-              style={{
-                position: "absolute",
-                width: 100,
-                height: 100,
-                borderRadius: 50,
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                top: -30,
-                right: -30,
-              }}
-            />
-
-            {/* Content */}
-            <View style={{ zIndex: 1, alignItems: "center" }}>
-              <View
-                style={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 12,
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 12,
-                }}
-              >
-                <MaterialIcons name="payment" size={26} color="white" />
-              </View>
-
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 14,
-                  fontWeight: "700",
-                  textAlign: "center",
-                  letterSpacing: 0.3,
-                }}
-              >
-                New Transaction
-              </Text>
-              <Text
-                style={{
-                  color: "rgba(255, 255, 255, 0.7)",
-                  fontSize: 12,
-                  marginTop: 4,
-                  textAlign: "center",
-                }}
-              >
-                Log your spending
-              </Text>
-            </View>
-          </LinearGradient>
+            <MaterialIcons name="payment" size={22} color={THEME.primary} />
+          </View>
+          <Text
+            style={{
+              color: THEME.textPrimary,
+              fontSize: 13,
+              fontWeight: "700",
+              textAlign: "center",
+            }}
+          >
+            New Transaction
+          </Text>
+          <Text
+            style={{
+              color: THEME.textSecondary,
+              fontSize: 11,
+              marginTop: 4,
+              textAlign: "center",
+            }}
+          >
+            Log spending
+          </Text>
         </TouchableOpacity>
 
         {/* New Budget Button */}
         <TouchableOpacity
-          style={{ flex: 1 }}
+          style={{
+            flex: 1,
+            backgroundColor: THEME.surface,
+            borderRadius: 16,
+            padding: 16,
+            alignItems: "center",
+            borderColor: THEME.border,
+            borderWidth: 1,
+          }}
           onPress={onNewBudget}
-          activeOpacity={0.85}
+          activeOpacity={0.7}
         >
-          <LinearGradient
-            colors={[THEME.secondary, THEME.primary]}
-            start={{ x: 1, y: 0 }}
-            end={{ x: 0, y: 1 }}
+          <View
             style={{
-              borderRadius: 16,
-              padding: 20,
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              backgroundColor: `${THEME.secondary}20`,
+              justifyContent: "center",
               alignItems: "center",
-              overflow: "hidden",
+              marginBottom: 10,
             }}
           >
-            {/* Background decorative element */}
-            <View
-              style={{
-                position: "absolute",
-                width: 100,
-                height: 100,
-                borderRadius: 50,
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                bottom: -30,
-                left: -30,
-              }}
+            <MaterialIcons
+              name="account-balance-wallet"
+              size={22}
+              color={THEME.secondary}
             />
-
-            {/* Content */}
-            <View style={{ zIndex: 1, alignItems: "center" }}>
-              <View
-                style={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 12,
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 12,
-                }}
-              >
-                <MaterialIcons
-                  name="account-balance-wallet"
-                  size={26}
-                  color="white"
-                />
-              </View>
-
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 14,
-                  fontWeight: "700",
-                  textAlign: "center",
-                  letterSpacing: 0.3,
-                }}
-              >
-                New Budget
-              </Text>
-              <Text
-                style={{
-                  color: "rgba(255, 255, 255, 0.7)",
-                  fontSize: 12,
-                  marginTop: 4,
-                  textAlign: "center",
-                }}
-              >
-                Set spending limit
-              </Text>
-            </View>
-          </LinearGradient>
+          </View>
+          <Text
+            style={{
+              color: THEME.textPrimary,
+              fontSize: 13,
+              fontWeight: "700",
+              textAlign: "center",
+            }}
+          >
+            New Budget
+          </Text>
+          <Text
+            style={{
+              color: THEME.textSecondary,
+              fontSize: 11,
+              marginTop: 4,
+              textAlign: "center",
+            }}
+          >
+            Set limit
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
