@@ -20,7 +20,9 @@ export default function QuickActions({ onNewTransaction, onNewBudget }: Props) {
   return (
     <View style={{ marginBottom: 24 }}>
       {/* Section header */}
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
+      >
         <Text
           style={{
             color: THEME.textPrimary,

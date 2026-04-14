@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getModalHeight, MODAL_BORDER_RADIUS } from "@/constants/appConfig";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ICONS } from "@/constants/CategoryIcons";
 import { Feather } from "@expo/vector-icons";
@@ -50,6 +51,8 @@ const IconSelectorModal = ({
     searchInputRef.current?.focus();
   };
 
+  const modalHeight = getModalHeight();
+
   return (
     <Modal
       visible={openIconSelector}
@@ -57,124 +60,138 @@ const IconSelectorModal = ({
       transparent={true}
       presentationStyle="pageSheet"
     >
-      <SafeAreaView
+      <View
         style={{
           flex: 1,
-          backgroundColor: THEME.background,
-          padding: 18,
-          position: "relative",
+          justifyContent: "flex-end",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
         }}
       >
-        <View className="mb-3 flex-row items-center justify-between">
-          <Text
-            className="text-base font-semibold"
-            style={{ color: THEME.textPrimary }}
-          >
-            Select Icon
-          </Text>
-          <TouchableOpacity
-            onPress={() => setOpenIconSelector(false)}
-            className="rounded-full p-2"
-            style={{ backgroundColor: THEME.surface }}
-            accessibilityRole="button"
-            accessibilityLabel="Close icon selector"
-          >
-            <Feather name="x" size={20} color={THEME.textPrimary} />
-          </TouchableOpacity>
-        </View>
-
-        <View className="mb-4 flex-row items-center justify-between">
-          <TextInput
-            ref={searchInputRef}
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-            placeholder="Search icons by name or category..."
-            className="py-4 pl-12 rounded-full px-4 flex-1"
-            style={{
-              backgroundColor: THEME.inputBackground,
-              color: THEME.textPrimary,
-            }}
-            placeholderTextColor={THEME.placeholderText}
-            clearButtonMode="never"
-          />
-          <Feather
-            className="absolute ml-4"
-            name="search"
-            size={20}
-            color={THEME.placeholderText}
-          />
-          {searchTerm.length > 0 && (
-            <TouchableOpacity
-              className="absolute right-4 rounded-full p-2"
-              onPress={handleClearSearch}
-              activeOpacity={0.7}
+        <SafeAreaView
+          style={{
+            height: modalHeight,
+            backgroundColor: THEME.background,
+            padding: 18,
+            position: "relative",
+            borderTopLeftRadius: MODAL_BORDER_RADIUS,
+            borderTopRightRadius: MODAL_BORDER_RADIUS,
+            overflow: "hidden",
+          }}
+        >
+          <View className="mb-3 flex-row items-center justify-between">
+            <Text
+              className="text-base font-semibold"
+              style={{ color: THEME.textPrimary }}
             >
-              <Feather name="x" size={20} color={THEME.placeholderText} />
+              Select Icon
+            </Text>
+            <TouchableOpacity
+              onPress={() => setOpenIconSelector(false)}
+              className="rounded-full p-2"
+              style={{ backgroundColor: THEME.surface }}
+              accessibilityRole="button"
+              accessibilityLabel="Close icon selector"
+            >
+              <Feather name="x" size={20} color={THEME.textPrimary} />
             </TouchableOpacity>
-          )}
-        </View>
-        <ScrollView showsVerticalScrollIndicator={false} className="flex-1 p-2">
-          {filteredIcons.length === 0 ? (
-            <View className="flex-1 items-center justify-center py-12">
-              <Feather
-                name="inbox"
-                size={48}
-                color={THEME.placeholderText}
-                style={{ marginBottom: 12 }}
-              />
-              <Text
-                style={{ color: THEME.textSecondary, marginBottom: 8 }}
-                className="text-base font-semibold"
-              >
-                No icons found
-              </Text>
-              <Text
-                style={{ color: THEME.placeholderText }}
-                className="text-xs text-center px-6"
-              >
-                Try searching with different keywords or categories
-              </Text>
-            </View>
-          ) : (
-            <View className="flex-row flex-wrap justify-between">
-              {filteredIcons.map((icon) => (
-                <TouchableOpacity
-                  onPress={() => {
-                    setIcon(icon.name);
-                    setOpenIconSelector(false);
-                  }}
-                  key={icon.id}
-                  className="items-center justify-center mb-4"
-                  style={{ width: "22%" }} // 4 columns
-                >
-                  <View
-                    className="rounded-xl items-center justify-center"
-                    style={{
-                      width: 64,
-                      height: 64,
-                      backgroundColor: THEME.inputBackground,
-                    }}
-                  >
-                    <Feather
-                      name={icon.name}
-                      size={28}
-                      color={THEME.secondary}
-                    />
-                  </View>
+          </View>
 
-                  <Text
-                    className="text-xs mt-1 text-center"
-                    style={{ color: THEME.textSecondary }}
-                    numberOfLines={1}
+          <View className="mb-4 flex-row items-center justify-between">
+            <TextInput
+              ref={searchInputRef}
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+              placeholder="Search icons by name or category..."
+              className="py-4 pl-12 rounded-full px-4 flex-1"
+              style={{
+                backgroundColor: THEME.inputBackground,
+                color: THEME.textPrimary,
+              }}
+              placeholderTextColor={THEME.placeholderText}
+              clearButtonMode="never"
+            />
+            <Feather
+              className="absolute ml-4"
+              name="search"
+              size={20}
+              color={THEME.placeholderText}
+            />
+            {searchTerm.length > 0 && (
+              <TouchableOpacity
+                className="absolute right-4 rounded-full p-2"
+                onPress={handleClearSearch}
+                activeOpacity={0.7}
+              >
+                <Feather name="x" size={20} color={THEME.placeholderText} />
+              </TouchableOpacity>
+            )}
+          </View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            className="flex-1 p-2"
+          >
+            {filteredIcons.length === 0 ? (
+              <View className="flex-1 items-center justify-center py-12">
+                <Feather
+                  name="inbox"
+                  size={48}
+                  color={THEME.placeholderText}
+                  style={{ marginBottom: 12 }}
+                />
+                <Text
+                  style={{ color: THEME.textSecondary, marginBottom: 8 }}
+                  className="text-base font-semibold"
+                >
+                  No icons found
+                </Text>
+                <Text
+                  style={{ color: THEME.placeholderText }}
+                  className="text-xs text-center px-6"
+                >
+                  Try searching with different keywords or categories
+                </Text>
+              </View>
+            ) : (
+              <View className="flex-row flex-wrap justify-between">
+                {filteredIcons.map((icon) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIcon(icon.name);
+                      setOpenIconSelector(false);
+                    }}
+                    key={icon.id}
+                    className="items-center justify-center mb-4"
+                    style={{ width: "22%" }} // 4 columns
                   >
-                    {icon.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </ScrollView>
-      </SafeAreaView>
+                    <View
+                      className="rounded-xl items-center justify-center"
+                      style={{
+                        width: 64,
+                        height: 64,
+                        backgroundColor: THEME.inputBackground,
+                      }}
+                    >
+                      <Feather
+                        name={icon.name}
+                        size={28}
+                        color={THEME.secondary}
+                      />
+                    </View>
+
+                    <Text
+                      className="text-xs mt-1 text-center"
+                      style={{ color: THEME.textSecondary }}
+                      numberOfLines={1}
+                    >
+                      {icon.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </Modal>
   );
 };
