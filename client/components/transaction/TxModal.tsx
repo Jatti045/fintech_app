@@ -330,7 +330,7 @@ function TransactionModal({
                             color:
                               projectedRemaining >= 0
                                 ? THEME.primary
-                                : THEME.error,
+                                : THEME.danger,
                           }}
                         >
                           Remaining: {getCurrencySymbol(userCurrency)}
