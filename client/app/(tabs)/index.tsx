@@ -13,7 +13,7 @@ import InformationModal from "@/components/home/informationModal";
 import { TopCategoriesChart } from "@/components/home/TopCategoriesChart";
 import HomeHeader from "@/components/home/HomeHeader";
 import MonthSelector from "@/components/home/MonthSelector";
-import SpentThisMonthCard from "@/components/home/SpentThisMonthCard";
+import DashboardOverview from "@/components/home/DashboardOverview";
 import QuickActions from "@/components/home/QuickActions";
 import BudgetSummary from "@/components/home/BudgetSummary";
 import GoalSummary from "@/components/home/GoalSummary";
@@ -247,11 +247,12 @@ export default function Index() {
           onNext={() => dispatch(nextMonth())}
         />
 
-        {/* Card showing total spent this month, with currency-aware formatting */}
-        <SpentThisMonthCard title="Monthly Income" total={monthlyIncome} />
-
-        {/* Card showing total spent this month, with currency-aware formatting */}
-        <SpentThisMonthCard total={expenseTotal} />
+        {/* Beautiful dashboard overview with income, spending, and budget health */}
+        <DashboardOverview
+          monthlyIncome={monthlyIncome}
+          totalSpent={expenseTotal}
+          monthLabel={monthLabel}
+        />
 
         {/* Quick action buttons for adding new transaction or budget */}
         <QuickActions
