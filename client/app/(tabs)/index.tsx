@@ -270,7 +270,7 @@ export default function Index() {
         <BudgetHealthScore />
 
         {/* Chart showing top spending categories for the month, with bars colored by budget ratio */}
-        <TopCategoriesChart label="Top Categories" totals={categoryTotals} />
+        {/* <TopCategoriesChart label="Top Categories" totals={categoryTotals} /> */}
 
         {/* List of 5 most recent transactions across all months */}
         {/* <RecentTransactions transactions={recentTransactions} /> */}

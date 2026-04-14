@@ -93,16 +93,28 @@ export default function DashboardOverview({
             >
               Monthly Income
             </Text>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 42,
-                fontWeight: "900",
-                letterSpacing: -1,
-              }}
-            >
-              ${formatNumber(monthlyIncome)}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 42,
+                  fontWeight: "900",
+                  letterSpacing: -1,
+                }}
+              >
+                {formatNumber(monthlyIncome)}
+              </Text>
+              <Text
+                style={{
+                  color: "rgba(255, 255, 255, 0.8)",
+                  fontSize: 16,
+                  fontWeight: "600",
+                  marginLeft: 8,
+                }}
+              >
+                {currency}
+              </Text>
+            </View>
           </View>
 
           {/* Divider */}
@@ -129,15 +141,27 @@ export default function DashboardOverview({
               >
                 Spent This Month
               </Text>
-              <Text
-                style={{
-                  color: "rgba(255, 255, 255, 0.95)",
-                  fontSize: 24,
-                  fontWeight: "700",
-                }}
-              >
-                ${formatNumber(totalSpent)}
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <Text
+                  style={{
+                    color: "rgba(255, 255, 255, 0.95)",
+                    fontSize: 24,
+                    fontWeight: "700",
+                  }}
+                >
+                  {formatNumber(totalSpent)}
+                </Text>
+                <Text
+                  style={{
+                    color: "rgba(255, 255, 255, 0.7)",
+                    fontSize: 12,
+                    fontWeight: "600",
+                    marginLeft: 6,
+                  }}
+                >
+                  {currency}
+                </Text>
+              </View>
             </View>
             <View style={{ alignItems: "flex-end" }}>
               <Text
@@ -150,15 +174,27 @@ export default function DashboardOverview({
               >
                 Remaining
               </Text>
-              <Text
-                style={{
-                  color: "rgba(255, 255, 255, 0.95)",
-                  fontSize: 24,
-                  fontWeight: "700",
-                }}
-              >
-                ${formatNumber(Math.max(0, remaining))}
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <Text
+                  style={{
+                    color: "rgba(255, 255, 255, 0.95)",
+                    fontSize: 24,
+                    fontWeight: "700",
+                  }}
+                >
+                  {formatNumber(Math.max(0, remaining))}
+                </Text>
+                <Text
+                  style={{
+                    color: "rgba(255, 255, 255, 0.7)",
+                    fontSize: 12,
+                    fontWeight: "600",
+                    marginLeft: 6,
+                  }}
+                >
+                  {currency}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
