@@ -1,76 +1,83 @@
 import React, { useMemo } from "react";
-import { View, Text, Dimensions } from "react-native";
+import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
-import { formatNumber, formatCurrency } from "@/utils/helper";
-import { useBudgets, useTheme, useUser } from "@/hooks/useRedux";
-
-type Props = {
-  monthlyIncome: number;
-  totalSpent: number;
-  monthLabel: string;
-};
+import { formatCurrency } from "@/utils/helper";
+import { useGoals, useTheme, useAuth } from "@/hooks/useRedux";
 
 /**
- * Beautiful modern dashboard overview component featuring:
- * - Monthly income display with gradient background
- * - Amount spent with visual feedback
- * - Remaining budget calculation
- * - Budget health indicator
+ * Beautiful goals overview header featuring:
+ * - Total goal targets
+ * - Total allocated amount
+ * - Progress towards goals
+ * - Goal statistics breakdown
  */
-export default function DashboardOverview({
-  monthlyIncome,
-  totalSpent,
-  monthLabel,
-}: Props) {
+export default function GoalOverviewHeader() {
   const { THEME } = useTheme();
-  const user = useUser();
-  const budgets = useBudgets();
+  const goals = useGoals();
+  const { user } = useAuth();
   const currency = user?.currency || "USD";
-  const screenWidth = Dimensions.get("window").width;
 
-  // Calculate remaining budget
-  const remaining = monthlyIncome - totalSpent;
-  const spendPercentage =
-    monthlyIncome > 0 ? Math.min(100, (totalSpent / monthlyIncome) * 100) : 0;
+  // Calculate totals
+  const stats = useMemo(() => {
+    let totalTarget = 0;
+    let totalAllocated = 0;
+    let completedCount = 0;
+    let inProgressCount = 0;
+    let notStartedCount = 0;
 
-  // Determine health status
-  const getHealthStatus = () => {
-    if (spendPercentage <= 50)
-      return { label: "Excellent", color: THEME.success };
-    if (spendPercentage <= 75) return { label: "Good", color: THEME.primary };
-    if (spendPercentage <= 100)
-      return { label: "Caution", color: THEME.warning };
-    return { label: "Over Budget", color: THEME.danger };
-  };
+    goals.forEach((goal: any) => {
+      const target = Number(goal.target ?? 0);
+      const allocated = Number(goal.allocated ?? 0);
+      totalTarget += target;
+      totalAllocated += allocated;
 
-  const healthStatus = getHealthStatus();
-
-  // Calculate budget summary stats
-  const budgetStats = useMemo(() => {
-    if (budgets.length === 0) return { onTrack: 0, warning: 0, danger: 0 };
-
-    let onTrack = 0;
-    let warning = 0;
-    let danger = 0;
-
-    budgets.forEach((b) => {
-      const spent = Number(b.spent || 0);
-      const limit = Number(b.limit || 0);
-      if (limit <= 0) return;
-
-      const ratio = spent / limit;
-      if (ratio <= 0.8) onTrack++;
-      else if (ratio <= 1.0) warning++;
-      else danger++;
+      if (allocated >= target) {
+        completedCount++;
+      } else if (allocated > 0) {
+        inProgressCount++;
+      } else {
+        notStartedCount++;
+      }
     });
 
-    return { onTrack, warning, danger };
-  }, [budgets]);
+    const remainingToSave = Math.max(0, totalTarget - totalAllocated);
+    const overallProgressPct =
+      totalTarget > 0 ? Math.min(100, (totalAllocated / totalTarget) * 100) : 0;
+
+    return {
+      totalTarget,
+      totalAllocated,
+      remainingToSave,
+      overallProgressPct,
+      completedCount,
+      inProgressCount,
+      notStartedCount,
+      goalCount: goals.length,
+    };
+  }, [goals]);
+
+  const getProgressStatus = () => {
+    if (stats.overallProgressPct >= 100)
+      return { label: "All Goals Met", color: THEME.success, icon: "award" };
+    if (stats.overallProgressPct >= 75)
+      return {
+        label: "Almost There",
+        color: THEME.primary,
+        icon: "trending-up",
+      };
+    if (stats.overallProgressPct >= 50)
+      return { label: "In Progress", color: THEME.warning, icon: "target" };
+    return { label: "Just Started", color: THEME.secondary, icon: "flag" };
+  };
+
+  const status = getProgressStatus();
+
+  if (stats.goalCount === 0) return null;
 
   return (
     <View style={{ marginBottom: 24 }}>
-      {/* Main gradient hero card */}
+      {/* Main gradient card */}
       <LinearGradient
         colors={[THEME.primary, THEME.secondary]}
         start={{ x: 0, y: 0 }}
@@ -78,11 +85,11 @@ export default function DashboardOverview({
         style={{
           borderRadius: 24,
           padding: 24,
-          marginBottom: 16,
           overflow: "hidden",
+          marginBottom: 16,
         }}
       >
-        {/* Decorative blur elements */}
+        {/* Decorative elements */}
         <View
           style={{
             position: "absolute",
@@ -106,54 +113,22 @@ export default function DashboardOverview({
           }}
         />
 
-        {/* Month label */}
-        <Text
-          style={{
-            color: "rgba(255, 255, 255, 0.7)",
-            fontSize: 13,
-            fontWeight: "600",
-            marginBottom: 8,
-          }}
-        >
-          {monthLabel.toUpperCase()}
-        </Text>
-
-        {/* Main content */}
-        <View style={{ zIndex: 1 }}>
-          {/* Income section */}
-          <View style={{ marginBottom: 24 }}>
-            <Text
-              style={{
-                color: "rgba(255, 255, 255, 0.8)",
-                fontSize: 13,
-                fontWeight: "500",
-                marginBottom: 6,
-              }}
-            >
-              Monthly Income
-            </Text>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 42,
-                fontWeight: "900",
-                letterSpacing: -1,
-              }}
-            >
-              ${formatNumber(monthlyIncome)}
-            </Text>
-          </View>
-
-          {/* Divider */}
-          <View
+        {/* Header */}
+        <View style={{ zIndex: 1, marginBottom: 24 }}>
+          <Text
             style={{
-              height: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              marginBottom: 24,
+              color: "rgba(255, 255, 255, 0.7)",
+              fontSize: 12,
+              fontWeight: "600",
+              marginBottom: 8,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
             }}
-          />
+          >
+            Goals Progress
+          </Text>
 
-          {/* Spent vs Remaining */}
+          {/* Main metrics row */}
           <View
             style={{ flexDirection: "row", justifyContent: "space-between" }}
           >
@@ -166,16 +141,17 @@ export default function DashboardOverview({
                   marginBottom: 4,
                 }}
               >
-                Spent This Month
+                Total Target
               </Text>
               <Text
                 style={{
-                  color: "rgba(255, 255, 255, 0.95)",
-                  fontSize: 24,
-                  fontWeight: "700",
+                  color: "white",
+                  fontSize: 32,
+                  fontWeight: "900",
+                  letterSpacing: -1,
                 }}
               >
-                ${formatNumber(totalSpent)}
+                ${formatCurrency(stats.totalTarget, currency).replace("$", "")}
               </Text>
             </View>
             <View style={{ alignItems: "flex-end" }}>
@@ -187,23 +163,60 @@ export default function DashboardOverview({
                   marginBottom: 4,
                 }}
               >
-                Remaining
+                Still Need
               </Text>
               <Text
                 style={{
                   color: "rgba(255, 255, 255, 0.95)",
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: "700",
                 }}
               >
-                ${formatNumber(Math.max(0, remaining))}
+                $
+                {formatCurrency(stats.remainingToSave, currency).replace(
+                  "$",
+                  "",
+                )}
               </Text>
             </View>
           </View>
         </View>
+
+        {/* Divider */}
+        <View
+          style={{
+            height: 1,
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
+            marginBottom: 16,
+            zIndex: 1,
+          }}
+        />
+
+        {/* Allocated amount */}
+        <View style={{ zIndex: 1 }}>
+          <Text
+            style={{
+              color: "rgba(255, 255, 255, 0.7)",
+              fontSize: 12,
+              fontWeight: "500",
+              marginBottom: 4,
+            }}
+          >
+            Total Allocated
+          </Text>
+          <Text
+            style={{
+              color: "rgba(255, 255, 255, 0.9)",
+              fontSize: 24,
+              fontWeight: "700",
+            }}
+          >
+            ${formatCurrency(stats.totalAllocated, currency).replace("$", "")}
+          </Text>
+        </View>
       </LinearGradient>
 
-      {/* Progress bar section */}
+      {/* Progress and status section */}
       <View
         style={{
           backgroundColor: THEME.surface,
@@ -211,10 +224,9 @@ export default function DashboardOverview({
           padding: 20,
           borderColor: THEME.border,
           borderWidth: 1,
-          marginBottom: 16,
         }}
       >
-        {/* Spending progress */}
+        {/* Progress bar */}
         <View style={{ marginBottom: 20 }}>
           <View
             style={{
@@ -230,7 +242,7 @@ export default function DashboardOverview({
                 fontSize: 14,
               }}
             >
-              Spending Progress
+              Overall Progress
             </Text>
             <Text
               style={{
@@ -239,11 +251,10 @@ export default function DashboardOverview({
                 fontSize: 13,
               }}
             >
-              {Math.round(spendPercentage)}%
+              {Math.round(stats.overallProgressPct)}%
             </Text>
           </View>
 
-          {/* Animated progress bar */}
           <View
             style={{
               height: 10,
@@ -254,23 +265,25 @@ export default function DashboardOverview({
           >
             <LinearGradient
               colors={
-                spendPercentage > 100
-                  ? [THEME.danger, THEME.warning]
-                  : spendPercentage > 75
-                    ? [THEME.warning, THEME.primary]
-                    : [THEME.primary, THEME.secondary]
+                stats.overallProgressPct >= 100
+                  ? [THEME.success, THEME.success]
+                  : stats.overallProgressPct >= 75
+                    ? [THEME.primary, THEME.secondary]
+                    : stats.overallProgressPct >= 50
+                      ? [THEME.warning, THEME.primary]
+                      : [THEME.secondary, THEME.primary]
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={{
-                width: `${Math.min(spendPercentage, 100)}%`,
+                width: `${Math.min(stats.overallProgressPct, 100)}%`,
                 height: "100%",
               }}
             />
           </View>
         </View>
 
-        {/* Health status */}
+        {/* Status row */}
         <View
           style={{
             flexDirection: "row",
@@ -287,7 +300,7 @@ export default function DashboardOverview({
                 width: 12,
                 height: 12,
                 borderRadius: 6,
-                backgroundColor: healthStatus.color,
+                backgroundColor: status.color,
                 marginRight: 10,
               }}
             />
@@ -298,25 +311,15 @@ export default function DashboardOverview({
                 fontSize: 14,
               }}
             >
-              Status: {healthStatus.label}
+              {status.label}
             </Text>
           </View>
-          <Feather
-            name={
-              spendPercentage <= 50
-                ? "trending-up"
-                : spendPercentage <= 100
-                  ? "minus"
-                  : "alert-circle"
-            }
-            size={18}
-            color={healthStatus.color}
-          />
+          <Feather name={status.icon as any} size={18} color={status.color} />
         </View>
       </View>
 
-      {/* Budget summary stats */}
-      {budgets.length > 0 && (
+      {/* Goal status breakdown */}
+      {stats.goalCount > 0 && (
         <View
           style={{
             backgroundColor: THEME.surface,
@@ -324,6 +327,7 @@ export default function DashboardOverview({
             padding: 20,
             borderColor: THEME.border,
             borderWidth: 1,
+            marginTop: 16,
           }}
         >
           <Text
@@ -334,13 +338,13 @@ export default function DashboardOverview({
               marginBottom: 16,
             }}
           >
-            Budget Overview
+            Goal Status ({stats.goalCount})
           </Text>
 
           <View
             style={{ flexDirection: "row", justifyContent: "space-around" }}
           >
-            {/* On Track */}
+            {/* Completed */}
             <View style={{ alignItems: "center" }}>
               <View
                 style={{
@@ -360,7 +364,7 @@ export default function DashboardOverview({
                     fontWeight: "700",
                   }}
                 >
-                  {budgetStats.onTrack}
+                  {stats.completedCount}
                 </Text>
               </View>
               <Text
@@ -370,18 +374,18 @@ export default function DashboardOverview({
                   fontWeight: "500",
                 }}
               >
-                On Track
+                Completed
               </Text>
             </View>
 
-            {/* Warning */}
+            {/* In Progress */}
             <View style={{ alignItems: "center" }}>
               <View
                 style={{
                   width: 60,
                   height: 60,
                   borderRadius: 12,
-                  backgroundColor: `${THEME.warning}20`,
+                  backgroundColor: `${THEME.primary}20`,
                   justifyContent: "center",
                   alignItems: "center",
                   marginBottom: 8,
@@ -389,12 +393,12 @@ export default function DashboardOverview({
               >
                 <Text
                   style={{
-                    color: THEME.warning,
+                    color: THEME.primary,
                     fontSize: 24,
                     fontWeight: "700",
                   }}
                 >
-                  {budgetStats.warning}
+                  {stats.inProgressCount}
                 </Text>
               </View>
               <Text
@@ -404,18 +408,18 @@ export default function DashboardOverview({
                   fontWeight: "500",
                 }}
               >
-                Warning
+                In Progress
               </Text>
             </View>
 
-            {/* Danger */}
+            {/* Not Started */}
             <View style={{ alignItems: "center" }}>
               <View
                 style={{
                   width: 60,
                   height: 60,
                   borderRadius: 12,
-                  backgroundColor: `${THEME.danger}20`,
+                  backgroundColor: `${THEME.textSecondary}20`,
                   justifyContent: "center",
                   alignItems: "center",
                   marginBottom: 8,
@@ -423,12 +427,12 @@ export default function DashboardOverview({
               >
                 <Text
                   style={{
-                    color: THEME.danger,
+                    color: THEME.textSecondary,
                     fontSize: 24,
                     fontWeight: "700",
                   }}
                 >
-                  {budgetStats.danger}
+                  {stats.notStartedCount}
                 </Text>
               </View>
               <Text
@@ -438,7 +442,7 @@ export default function DashboardOverview({
                   fontWeight: "500",
                 }}
               >
-                Over Budget
+                Not Started
               </Text>
             </View>
           </View>
