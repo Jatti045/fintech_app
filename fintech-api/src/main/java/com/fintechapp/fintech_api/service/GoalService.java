@@ -1,6 +1,8 @@
 package com.fintechapp.fintech_api.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -45,10 +47,25 @@ public class GoalService {
     }
 
     @Transactional(readOnly = true)
-    public GoalsResponse getGoals(AuthenticatedUser authenticatedUser) {
+    public GoalsResponse getGoals(AuthenticatedUser authenticatedUser, String monthRaw, String yearRaw) {
         String userId = requireUserId(authenticatedUser);
 
-        List<GoalItemResponse> goals = goalRepository.findByUser_IdOrderByCreatedAtDesc(userId)
+        if (monthRaw == null || yearRaw == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "month and year query parameters are required");
+        }
+
+        Integer month = parseInteger(monthRaw);
+        Integer year = parseInteger(yearRaw);
+        if (month == null || year == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Month and year query parameters are required");
+        }
+
+        Instant monthStart = monthStart(year, month);
+        Instant nextMonthStart = nextMonthStart(year, month);
+
+        System.out.println("Month start : " + monthStart + "Next month start : " + nextMonthStart);
+
+        List<GoalItemResponse> goals = goalRepository.findByUser_IdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByUpdatedAtDesc(userId, monthStart, nextMonthStart)
                 .stream()
                 .map(this::toGoalItem)
                 .toList();
@@ -246,5 +263,27 @@ public class GoalService {
 
     private String normalizeOptional(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
+    }
+
+    private Integer parseInteger(String rawValue) {
+        try {
+            return Integer.parseInt(rawValue);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Instant monthStart(int year, int month) {
+        if (month < 0 || month > 11 || year <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid month/year value");
+        }
+        return LocalDate.of(year, month + 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC);
+    }
+
+    private Instant nextMonthStart(int year, int month) {
+        return LocalDate.of(year, month + 1, 1)
+                .plusMonths(1)
+                .atStartOfDay()
+                .toInstant(ZoneOffset.UTC);
     }
 }

@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
+import java.util.AbstractMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Disabled;
@@ -31,23 +32,36 @@ class TransactionControllerIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/transactions")
                         .header(authHeaderName(), authHeader(user))
                         .contentType(json())
-                        .content(asJson(Map.of(
-                                "name", "Lunch",
-                                "month", 2,
-                                "year", 2026,
-                                "date", "2026-03-05T10:00:00Z",
-                                "category", "Food",
-                                "type", "EXPENSE",
-                                "amount", 25.5,
-                                "budgetId", budget.getId(),
-                                "description", "Team lunch"
+                        .content(asJson(Map.ofEntries(
+                                new AbstractMap.SimpleEntry<>("name", "Lunch"),
+                                new AbstractMap.SimpleEntry<>("month", 2),
+                                new AbstractMap.SimpleEntry<>("year", 2026),
+                                new AbstractMap.SimpleEntry<>("date", "2026-03-05T10:00:00Z"),
+                                new AbstractMap.SimpleEntry<>("category", "Food"),
+                                new AbstractMap.SimpleEntry<>("type", "EXPENSE"),
+                                new AbstractMap.SimpleEntry<>("amount", 18.73),
+                                new AbstractMap.SimpleEntry<>("baseCurrency", "USD"),
+                                new AbstractMap.SimpleEntry<>("originalAmount", 25.5),
+                                new AbstractMap.SimpleEntry<>("originalCurrency", "SGD"),
+                                new AbstractMap.SimpleEntry<>("budgetId", budget.getId()),
+                                new AbstractMap.SimpleEntry<>("description", "Team lunch")
                         ))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.transaction.name").value("Lunch"));
+                .andExpect(jsonPath("$.data.transaction.name").value("Lunch"))
+                .andExpect(jsonPath("$.data.transaction.amount").value(18.73))
+                .andExpect(jsonPath("$.data.transaction.baseCurrency").value("USD"))
+                .andExpect(jsonPath("$.data.transaction.originalAmount").value(25.5))
+                .andExpect(jsonPath("$.data.transaction.originalCurrency").value("SGD"));
 
         Budget updatedBudget = budgetRepository.findById(budget.getId()).orElseThrow();
-        org.junit.jupiter.api.Assertions.assertEquals(25.5, updatedBudget.getSpent());
+        org.junit.jupiter.api.Assertions.assertEquals(18.73, updatedBudget.getSpent());
+
+        Transaction savedTx = transactionRepository.findByUser_IdOrderByDateDesc(user.getId()).get(0);
+        org.junit.jupiter.api.Assertions.assertEquals(18.73, savedTx.getAmount());
+        org.junit.jupiter.api.Assertions.assertEquals("USD", savedTx.getBaseCurrency());
+        org.junit.jupiter.api.Assertions.assertEquals(25.5, savedTx.getOriginalAmount());
+        org.junit.jupiter.api.Assertions.assertEquals("SGD", savedTx.getOriginalCurrency());
     }
 
     // Asserts create transaction rejects missing required fields with 400.

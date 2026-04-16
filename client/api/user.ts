@@ -44,6 +44,16 @@ async function clearUserStorage(userId?: string | null): Promise<void> {
 }
 
 class UserAPI extends BaseAPI {
+  async hasAnyTransactions(): Promise<boolean> {
+    const response = await this.makeRequest<any>("/transaction", {
+      method: "GET",
+      params: { page: 1, limit: 1 },
+    });
+
+    const totalCount = Number(response?.data?.pagination?.totalCount ?? 0);
+    return totalCount > 0;
+  }
+
   async login(
     credentials: ILoginData,
   ): Promise<IApiResponse<{ user: IUser; token: string }>> {

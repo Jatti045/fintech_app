@@ -103,6 +103,8 @@ public class BudgetService {
         Instant monthStart = monthStart(year, month);
         Instant nextMonthStart = nextMonthStart(year, month);
 
+        System.out.println(" BUDGET: Month start : " + monthStart + "Next month start : " + nextMonthStart);
+
         List<BudgetItemResponse> budgets = budgetRepository
                 .findByUser_IdAndDateGreaterThanEqualAndDateLessThanOrderByDateDesc(userId, monthStart, nextMonthStart)
                 .stream()

@@ -10,9 +10,12 @@ const initialState: GoalState = {
 
 export const fetchGoals = createAsyncThunk(
   "goal/fetchGoals",
-  async (_, { rejectWithValue }) => {
+  async ({currentMonth, currentYear}: {currentMonth: number, currentYear: number}, { rejectWithValue }) => {
     try {
-      const response = await goalAPI.fetchAll();
+      const response = await goalAPI.fetchAll({
+        currentMonth,
+        currentYear
+      });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to fetch goals");

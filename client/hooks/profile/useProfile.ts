@@ -18,6 +18,7 @@ import {
   loadUserFromStorage,
 } from "@/store/slices/userSlice";
 import { setTheme } from "@/store/slices/themeSlice";
+import { userAPI } from "@/api/user";
 
 import { useThemedAlert } from "@/utils/themedAlert";
 import { clearRatesCache } from "@/utils/currencyConverter";
@@ -216,6 +217,16 @@ export function useProfile(): UseProfileReturn {
 
       (async () => {
         try {
+          const hasTransactions = await userAPI.hasAnyTransactions();
+          if (hasTransactions) {
+            showAlert({
+              title: "Currency Locked",
+              message:
+                "You cannot change your default currency because transactions already exist.",
+            });
+            return;
+          }
+
           const result = await dispatch(updateUserCurrency(code));
           if (updateUserCurrency.fulfilled.match(result)) {
             clearRatesCache();

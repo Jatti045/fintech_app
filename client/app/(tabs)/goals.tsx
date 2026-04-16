@@ -46,7 +46,6 @@ export default function GoalsScreen() {
   const dispatch = useAppDispatch();
   const { THEME } = useTheme();
   const { user } = useAuth();
-  const calendar = useCalendar();
   const { showAlert } = useThemedAlert();
   const goals = useGoals();
   const { isLoading } = useGoalStatus();
@@ -66,13 +65,13 @@ export default function GoalsScreen() {
   const [goalTarget, setGoalTarget] = useState("");
   const [goalIcon, setGoalIcon] = useState("");
   const [allocateAmount, setAllocateAmount] = useState("");
-
+  const calendar = useCalendar();
   const isInitialLoading = isLoading && goals.length === 0 && !isSearching;
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await dispatch(fetchGoals());
+      await dispatch(fetchGoals({currentMonth: calendar.month, currentYear: calendar.year}));
     } finally {
       setRefreshing(false);
     }

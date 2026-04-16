@@ -30,7 +30,7 @@ export default function TabsLayout() {
       }),
     );
     dispatch(fetchBudgets({ currentMonth: month, currentYear: year }));
-    dispatch(fetchGoals());
+    dispatch(fetchGoals({currentMonth: month, currentYear: year}));
   }, [dispatch, month, year]);
 
   return (

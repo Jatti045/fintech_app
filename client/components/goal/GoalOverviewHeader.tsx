@@ -217,237 +217,237 @@ export default function GoalOverviewHeader() {
       </LinearGradient>
 
       {/* Progress and status section */}
-      <View
-        style={{
-          backgroundColor: THEME.surface,
-          borderRadius: 20,
-          padding: 20,
-          borderColor: THEME.border,
-          borderWidth: 1,
-        }}
-      >
-        {/* Progress bar */}
-        <View style={{ marginBottom: 20 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 10,
-            }}
-          >
-            <Text
-              style={{
-                color: THEME.textPrimary,
-                fontWeight: "700",
-                fontSize: 14,
-              }}
-            >
-              Overall Progress
-            </Text>
-            <Text
-              style={{
-                color: THEME.textSecondary,
-                fontWeight: "600",
-                fontSize: 13,
-              }}
-            >
-              {Math.round(stats.overallProgressPct)}%
-            </Text>
-          </View>
+      {/*<View*/}
+      {/*  style={{*/}
+      {/*    backgroundColor: THEME.surface,*/}
+      {/*    borderRadius: 20,*/}
+      {/*    padding: 20,*/}
+      {/*    borderColor: THEME.border,*/}
+      {/*    borderWidth: 1,*/}
+      {/*  }}*/}
+      {/*>*/}
+      {/*  /!* Progress bar *!/*/}
+      {/*  <View style={{ marginBottom: 20 }}>*/}
+      {/*    <View*/}
+      {/*      style={{*/}
+      {/*        flexDirection: "row",*/}
+      {/*        justifyContent: "space-between",*/}
+      {/*        marginBottom: 10,*/}
+      {/*      }}*/}
+      {/*    >*/}
+      {/*      <Text*/}
+      {/*        style={{*/}
+      {/*          color: THEME.textPrimary,*/}
+      {/*          fontWeight: "700",*/}
+      {/*          fontSize: 14,*/}
+      {/*        }}*/}
+      {/*      >*/}
+      {/*        Overall Progress*/}
+      {/*      </Text>*/}
+      {/*      <Text*/}
+      {/*        style={{*/}
+      {/*          color: THEME.textSecondary,*/}
+      {/*          fontWeight: "600",*/}
+      {/*          fontSize: 13,*/}
+      {/*        }}*/}
+      {/*      >*/}
+      {/*        {Math.round(stats.overallProgressPct)}%*/}
+      {/*      </Text>*/}
+      {/*    </View>*/}
 
-          <View
-            style={{
-              height: 10,
-              backgroundColor: THEME.border,
-              borderRadius: 999,
-              overflow: "hidden",
-            }}
-          >
-            <LinearGradient
-              colors={
-                stats.overallProgressPct >= 100
-                  ? [THEME.success, THEME.success]
-                  : stats.overallProgressPct >= 75
-                    ? [THEME.primary, THEME.secondary]
-                    : stats.overallProgressPct >= 50
-                      ? [THEME.warning, THEME.primary]
-                      : [THEME.secondary, THEME.primary]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                width: `${Math.min(stats.overallProgressPct, 100)}%`,
-                height: "100%",
-              }}
-            />
+      {/*    <View*/}
+      {/*      style={{*/}
+      {/*        height: 10,*/}
+      {/*        backgroundColor: THEME.border,*/}
+      {/*        borderRadius: 999,*/}
+      {/*        overflow: "hidden",*/}
+      {/*      }}*/}
+      {/*    >*/}
+      {/*      <LinearGradient*/}
+      {/*        colors={*/}
+      {/*          stats.overallProgressPct >= 100*/}
+      {/*            ? [THEME.success, THEME.success]*/}
+      {/*            : stats.overallProgressPct >= 75*/}
+      {/*              ? [THEME.primary, THEME.secondary]*/}
+      {/*              : stats.overallProgressPct >= 50*/}
+      {/*                ? [THEME.warning, THEME.primary]*/}
+      {/*                : [THEME.secondary, THEME.primary]*/}
+      {/*        }*/}
+      {/*        start={{ x: 0, y: 0 }}*/}
+      {/*        end={{ x: 1, y: 0 }}*/}
+      {/*        style={{*/}
+      {/*          width: `${Math.min(stats.overallProgressPct, 100)}%`,*/}
+      {/*          height: "100%",*/}
+      {/*        }}*/}
+      {/*      />*/}
+      {/*    </View>*/}
+      {/*  </View>*/}
+
+      {/*  /!* Status row *!/*/}
+      {/*  <View*/}
+      {/*    style={{*/}
+      {/*      flexDirection: "row",*/}
+      {/*      alignItems: "center",*/}
+      {/*      justifyContent: "space-between",*/}
+      {/*      paddingTop: 16,*/}
+      {/*      borderTopColor: THEME.border,*/}
+      {/*      borderTopWidth: 1,*/}
+      {/*    }}*/}
+      {/*  >*/}
+      {/*    <View style={{ flexDirection: "row", alignItems: "center" }}>*/}
+      {/*      <View*/}
+      {/*        style={{*/}
+      {/*          width: 12,*/}
+      {/*          height: 12,*/}
+      {/*          borderRadius: 6,*/}
+      {/*          backgroundColor: status.color,*/}
+      {/*          marginRight: 10,*/}
+      {/*        }}*/}
+      {/*      />*/}
+      {/*      <Text*/}
+      {/*        style={{*/}
+      {/*          color: THEME.textPrimary,*/}
+      {/*          fontWeight: "700",*/}
+      {/*          fontSize: 14,*/}
+      {/*        }}*/}
+      {/*      >*/}
+      {/*        {status.label}*/}
+      {/*      </Text>*/}
+      {/*    </View>*/}
+      {/*    <Feather name={status.icon as any} size={18} color={status.color} />*/}
+      {/*  </View>*/}
+      {/*</View>*/}
+
+      {/*/!* Goal status breakdown *!/*/}
+      {/*{stats.goalCount > 0 && (*/}
+      {/*  <View*/}
+      {/*    style={{*/}
+      {/*      backgroundColor: THEME.surface,*/}
+      {/*      borderRadius: 20,*/}
+      {/*      padding: 20,*/}
+      {/*      borderColor: THEME.border,*/}
+      {/*      borderWidth: 1,*/}
+      {/*      marginTop: 16,*/}
+      {/*    }}*/}
+      {/*  >*/}
+      {/*    <Text*/}
+      {/*      style={{*/}
+      {/*        color: THEME.textPrimary,*/}
+      {/*        fontWeight: "700",*/}
+      {/*        fontSize: 14,*/}
+      {/*        marginBottom: 16,*/}
+      {/*      }}*/}
+      {/*    >*/}
+      {/*      Goal Status ({stats.goalCount})*/}
+      {/*    </Text>*/}
+
+      {/*    <View*/}
+      {/*      style={{ flexDirection: "row", justifyContent: "space-around" }}*/}
+      {/*    >*/}
+      {/*      /!* Completed *!/*/}
+      {/*      <View style={{ alignItems: "center" }}>*/}
+      {/*        <View*/}
+      {/*          style={{*/}
+      {/*            width: 60,*/}
+      {/*            height: 60,*/}
+      {/*            borderRadius: 12,*/}
+      {/*            backgroundColor: `${THEME.success}20`,*/}
+      {/*            justifyContent: "center",*/}
+      {/*            alignItems: "center",*/}
+      {/*            marginBottom: 8,*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          <Text*/}
+      {/*            style={{*/}
+      {/*              color: THEME.success,*/}
+      {/*              fontSize: 24,*/}
+      {/*              fontWeight: "700",*/}
+      {/*            }}*/}
+      {/*          >*/}
+      {/*            {stats.completedCount}*/}
+      {/*          </Text>*/}
+      {/*        </View>*/}
+      {/*        <Text*/}
+      {/*          style={{*/}
+      {/*            color: THEME.textSecondary,*/}
+      {/*            fontSize: 12,*/}
+      {/*            fontWeight: "500",*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          Completed*/}
+      {/*        </Text>*/}
+      {/*      </View>*/}
+
+      {/*      /!* In Progress *!/*/}
+      {/*      <View style={{ alignItems: "center" }}>*/}
+      {/*        <View*/}
+      {/*          style={{*/}
+      {/*            width: 60,*/}
+      {/*            height: 60,*/}
+      {/*            borderRadius: 12,*/}
+      {/*            backgroundColor: `${THEME.primary}20`,*/}
+      {/*            justifyContent: "center",*/}
+      {/*            alignItems: "center",*/}
+      {/*            marginBottom: 8,*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          <Text*/}
+      {/*            style={{*/}
+      {/*              color: THEME.primary,*/}
+      {/*              fontSize: 24,*/}
+      {/*              fontWeight: "700",*/}
+      {/*            }}*/}
+      {/*          >*/}
+      {/*            {stats.inProgressCount}*/}
+      {/*          </Text>*/}
+      {/*        </View>*/}
+      {/*        <Text*/}
+      {/*          style={{*/}
+      {/*            color: THEME.textSecondary,*/}
+      {/*            fontSize: 12,*/}
+      {/*            fontWeight: "500",*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          In Progress*/}
+      {/*        </Text>*/}
+      {/*      </View>*/}
+
+      {/*      /!* Not Started *!/*/}
+      {/*      <View style={{ alignItems: "center" }}>*/}
+      {/*        <View*/}
+      {/*          style={{*/}
+      {/*            width: 60,*/}
+      {/*            height: 60,*/}
+      {/*            borderRadius: 12,*/}
+      {/*            backgroundColor: `${THEME.textSecondary}20`,*/}
+      {/*            justifyContent: "center",*/}
+      {/*            alignItems: "center",*/}
+      {/*            marginBottom: 8,*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          <Text*/}
+      {/*            style={{*/}
+      {/*              color: THEME.textSecondary,*/}
+      {/*              fontSize: 24,*/}
+      {/*              fontWeight: "700",*/}
+      {/*            }}*/}
+      {/*          >*/}
+      {/*            {stats.notStartedCount}*/}
+      {/*          </Text>*/}
+      {/*        </View>*/}
+      {/*        <Text*/}
+      {/*          style={{*/}
+      {/*            color: THEME.textSecondary,*/}
+      {/*            fontSize: 12,*/}
+      {/*            fontWeight: "500",*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          Not Started*/}
+      {/*        </Text>*/}
+      {/*      </View>
           </View>
         </View>
-
-        {/* Status row */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingTop: 16,
-            borderTopColor: THEME.border,
-            borderTopWidth: 1,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: status.color,
-                marginRight: 10,
-              }}
-            />
-            <Text
-              style={{
-                color: THEME.textPrimary,
-                fontWeight: "700",
-                fontSize: 14,
-              }}
-            >
-              {status.label}
-            </Text>
-          </View>
-          <Feather name={status.icon as any} size={18} color={status.color} />
-        </View>
-      </View>
-
-      {/* Goal status breakdown */}
-      {stats.goalCount > 0 && (
-        <View
-          style={{
-            backgroundColor: THEME.surface,
-            borderRadius: 20,
-            padding: 20,
-            borderColor: THEME.border,
-            borderWidth: 1,
-            marginTop: 16,
-          }}
-        >
-          <Text
-            style={{
-              color: THEME.textPrimary,
-              fontWeight: "700",
-              fontSize: 14,
-              marginBottom: 16,
-            }}
-          >
-            Goal Status ({stats.goalCount})
-          </Text>
-
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-around" }}
-          >
-            {/* Completed */}
-            <View style={{ alignItems: "center" }}>
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 12,
-                  backgroundColor: `${THEME.success}20`,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    color: THEME.success,
-                    fontSize: 24,
-                    fontWeight: "700",
-                  }}
-                >
-                  {stats.completedCount}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  color: THEME.textSecondary,
-                  fontSize: 12,
-                  fontWeight: "500",
-                }}
-              >
-                Completed
-              </Text>
-            </View>
-
-            {/* In Progress */}
-            <View style={{ alignItems: "center" }}>
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 12,
-                  backgroundColor: `${THEME.primary}20`,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    color: THEME.primary,
-                    fontSize: 24,
-                    fontWeight: "700",
-                  }}
-                >
-                  {stats.inProgressCount}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  color: THEME.textSecondary,
-                  fontSize: 12,
-                  fontWeight: "500",
-                }}
-              >
-                In Progress
-              </Text>
-            </View>
-
-            {/* Not Started */}
-            <View style={{ alignItems: "center" }}>
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 12,
-                  backgroundColor: `${THEME.textSecondary}20`,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    color: THEME.textSecondary,
-                    fontSize: 24,
-                    fontWeight: "700",
-                  }}
-                >
-                  {stats.notStartedCount}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  color: THEME.textSecondary,
-                  fontSize: 12,
-                  fontWeight: "500",
-                }}
-              >
-                Not Started
-              </Text>
-            </View>
-          </View>
-        </View>
-      )}
+      )} */}
     </View>
   );
 }
