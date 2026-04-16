@@ -3,9 +3,10 @@ import type { IApiResponse } from "@/types/api/types";
 import type { IGoal, IGoalData } from "@/types/goal/types";
 
 class GoalAPI extends BaseAPI {
-  async fetchAll(): Promise<IApiResponse<IGoal[]>> {
+  async fetchAll({currentMonth, currentYear}: {currentMonth: number, currentYear: number}): Promise<IApiResponse<IGoal[]>> {
     return this.makeRequest<IGoal[]>("/goal", {
       method: "GET",
+      params: {month: currentMonth, year: currentYear}
     });
   }
 

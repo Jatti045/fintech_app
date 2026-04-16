@@ -227,235 +227,235 @@ export default function BudgetOverviewHeader() {
       </LinearGradient>
 
       {/* Utilization and stats section */}
-      <View
-        style={{
-          backgroundColor: THEME.surface,
-          borderRadius: 20,
-          padding: 20,
-          borderColor: THEME.border,
-          borderWidth: 1,
-        }}
-      >
-        {/* Progress bar */}
-        <View style={{ marginBottom: 20 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 10,
-            }}
-          >
-            <Text
-              style={{
-                color: THEME.textPrimary,
-                fontWeight: "700",
-                fontSize: 14,
-              }}
-            >
-              Budget Utilization
-            </Text>
-            <Text
-              style={{
-                color: THEME.textSecondary,
-                fontWeight: "600",
-                fontSize: 13,
-              }}
-            >
-              {Math.round(stats.utilizationPct)}%
-            </Text>
-          </View>
+      {/*<View*/}
+      {/*  style={{*/}
+      {/*    backgroundColor: THEME.surface,*/}
+      {/*    borderRadius: 20,*/}
+      {/*    padding: 20,*/}
+      {/*    borderColor: THEME.border,*/}
+      {/*    borderWidth: 1,*/}
+      {/*  }}*/}
+      {/*>*/}
+      {/*  /!* Progress bar *!/*/}
+      {/*  <View style={{ marginBottom: 20 }}>*/}
+      {/*    <View*/}
+      {/*      style={{*/}
+      {/*        flexDirection: "row",*/}
+      {/*        justifyContent: "space-between",*/}
+      {/*        marginBottom: 10,*/}
+      {/*      }}*/}
+      {/*    >*/}
+      {/*      <Text*/}
+      {/*        style={{*/}
+      {/*          color: THEME.textPrimary,*/}
+      {/*          fontWeight: "700",*/}
+      {/*          fontSize: 14,*/}
+      {/*        }}*/}
+      {/*      >*/}
+      {/*        Budget Utilization*/}
+      {/*      </Text>*/}
+      {/*      <Text*/}
+      {/*        style={{*/}
+      {/*          color: THEME.textSecondary,*/}
+      {/*          fontWeight: "600",*/}
+      {/*          fontSize: 13,*/}
+      {/*        }}*/}
+      {/*      >*/}
+      {/*        {Math.round(stats.utilizationPct)}%*/}
+      {/*      </Text>*/}
+      {/*    </View>*/}
 
-          <View
-            style={{
-              height: 10,
-              backgroundColor: THEME.border,
-              borderRadius: 999,
-              overflow: "hidden",
-            }}
-          >
-            <LinearGradient
-              colors={
-                stats.utilizationPct > 100
-                  ? [THEME.danger, THEME.warning]
-                  : stats.utilizationPct > 75
-                    ? [THEME.warning, THEME.primary]
-                    : [THEME.primary, THEME.secondary]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                width: `${Math.min(stats.utilizationPct, 100)}%`,
-                height: "100%",
-              }}
-            />
-          </View>
+      {/*    <View*/}
+      {/*      style={{*/}
+      {/*        height: 10,*/}
+      {/*        backgroundColor: THEME.border,*/}
+      {/*        borderRadius: 999,*/}
+      {/*        overflow: "hidden",*/}
+      {/*      }}*/}
+      {/*    >*/}
+      {/*      <LinearGradient*/}
+      {/*        colors={*/}
+      {/*          stats.utilizationPct > 100*/}
+      {/*            ? [THEME.danger, THEME.warning]*/}
+      {/*            : stats.utilizationPct > 75*/}
+      {/*              ? [THEME.warning, THEME.primary]*/}
+      {/*              : [THEME.primary, THEME.secondary]*/}
+      {/*        }*/}
+      {/*        start={{ x: 0, y: 0 }}*/}
+      {/*        end={{ x: 1, y: 0 }}*/}
+      {/*        style={{*/}
+      {/*          width: `${Math.min(stats.utilizationPct, 100)}%`,*/}
+      {/*          height: "100%",*/}
+      {/*        }}*/}
+      {/*      />*/}
+      {/*    </View>*/}
+      {/*  </View>*/}
+
+      {/*  /!* Status row *!/*/}
+      {/*  <View*/}
+      {/*    style={{*/}
+      {/*      flexDirection: "row",*/}
+      {/*      alignItems: "center",*/}
+      {/*      justifyContent: "space-between",*/}
+      {/*      paddingTop: 16,*/}
+      {/*      borderTopColor: THEME.border,*/}
+      {/*      borderTopWidth: 1,*/}
+      {/*    }}*/}
+      {/*  >*/}
+      {/*    <View style={{ flexDirection: "row", alignItems: "center" }}>*/}
+      {/*      <View*/}
+      {/*        style={{*/}
+      {/*          width: 12,*/}
+      {/*          height: 12,*/}
+      {/*          borderRadius: 6,*/}
+      {/*          backgroundColor: status.color,*/}
+      {/*          marginRight: 10,*/}
+      {/*        }}*/}
+      {/*      />*/}
+      {/*      <Text*/}
+      {/*        style={{*/}
+      {/*          color: THEME.textPrimary,*/}
+      {/*          fontWeight: "700",*/}
+      {/*          fontSize: 14,*/}
+      {/*        }}*/}
+      {/*      >*/}
+      {/*        Status: {status.label}*/}
+      {/*      </Text>*/}
+      {/*    </View>*/}
+      {/*    <Feather name={status.icon as any} size={18} color={status.color} />*/}
+      {/*  </View>*/}
+      {/*</View>*/}
+
+      {/*/!* Category breakdown stats *!/*/}
+      {/*{stats.budgetCount > 0 && (*/}
+      {/*  <View*/}
+      {/*    style={{*/}
+      {/*      backgroundColor: THEME.surface,*/}
+      {/*      borderRadius: 20,*/}
+      {/*      padding: 20,*/}
+      {/*      borderColor: THEME.border,*/}
+      {/*      borderWidth: 1,*/}
+      {/*      marginTop: 16,*/}
+      {/*    }}*/}
+      {/*  >*/}
+      {/*    <Text*/}
+      {/*      style={{*/}
+      {/*        color: THEME.textPrimary,*/}
+      {/*        fontWeight: "700",*/}
+      {/*        fontSize: 14,*/}
+      {/*        marginBottom: 16,*/}
+      {/*      }}*/}
+      {/*    >*/}
+      {/*      Category Status ({stats.budgetCount})*/}
+      {/*    </Text>*/}
+
+      {/*    <View*/}
+      {/*      style={{ flexDirection: "row", justifyContent: "space-around" }}*/}
+      {/*    >*/}
+      {/*      /!* On Track *!/*/}
+      {/*      <View style={{ alignItems: "center" }}>*/}
+      {/*        <View*/}
+      {/*          style={{*/}
+      {/*            width: 60,*/}
+      {/*            height: 60,*/}
+      {/*            borderRadius: 12,*/}
+      {/*            backgroundColor: `${THEME.success}20`,*/}
+      {/*            justifyContent: "center",*/}
+      {/*            alignItems: "center",*/}
+      {/*            marginBottom: 8,*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          <Text*/}
+      {/*            style={{*/}
+      {/*              color: THEME.success,*/}
+      {/*              fontSize: 24,*/}
+      {/*              fontWeight: "700",*/}
+      {/*            }}*/}
+      {/*          >*/}
+      {/*            {stats.onTrack}*/}
+      {/*          </Text>*/}
+      {/*        </View>*/}
+      {/*        <Text*/}
+      {/*          style={{*/}
+      {/*            color: THEME.textSecondary,*/}
+      {/*            fontSize: 12,*/}
+      {/*            fontWeight: "500",*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          On Track*/}
+      {/*        </Text>*/}
+      {/*      </View>*/}
+
+      {/*      /!* Warning *!/*/}
+      {/*      <View style={{ alignItems: "center" }}>*/}
+      {/*        <View*/}
+      {/*          style={{*/}
+      {/*            width: 60,*/}
+      {/*            height: 60,*/}
+      {/*            borderRadius: 12,*/}
+      {/*            backgroundColor: `${THEME.warning}20`,*/}
+      {/*            justifyContent: "center",*/}
+      {/*            alignItems: "center",*/}
+      {/*            marginBottom: 8,*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          <Text*/}
+      {/*            style={{*/}
+      {/*              color: THEME.warning,*/}
+      {/*              fontSize: 24,*/}
+      {/*              fontWeight: "700",*/}
+      {/*            }}*/}
+      {/*          >*/}
+      {/*            {stats.warning}*/}
+      {/*          </Text>*/}
+      {/*        </View>*/}
+      {/*        <Text*/}
+      {/*          style={{*/}
+      {/*            color: THEME.textSecondary,*/}
+      {/*            fontSize: 12,*/}
+      {/*            fontWeight: "500",*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          Warning*/}
+      {/*        </Text>*/}
+      {/*      </View>*/}
+
+      {/*      /!* Danger *!/*/}
+      {/*      <View style={{ alignItems: "center" }}>*/}
+      {/*        <View*/}
+      {/*          style={{*/}
+      {/*            width: 60,*/}
+      {/*            height: 60,*/}
+      {/*            borderRadius: 12,*/}
+      {/*            backgroundColor: `${THEME.danger}20`,*/}
+      {/*            justifyContent: "center",*/}
+      {/*            alignItems: "center",*/}
+      {/*            marginBottom: 8,*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          <Text*/}
+      {/*            style={{*/}
+      {/*              color: THEME.danger,*/}
+      {/*              fontSize: 24,*/}
+      {/*              fontWeight: "700",*/}
+      {/*            }}*/}
+      {/*          >*/}
+      {/*            {stats.danger}*/}
+      {/*          </Text>*/}
+      {/*        </View>*/}
+      {/*        <Text*/}
+      {/*          style={{*/}
+      {/*            color: THEME.textSecondary,*/}
+      {/*            fontSize: 12,*/}
+      {/*            fontWeight: "500",*/}
+      {/*          }}*/}
+      {/*        >*/}
+      {/*          Over Budget*/}
+      {/*        </Text>*/}
+      {/*      </View>*/}
+      {/*    </View>
         </View>
-
-        {/* Status row */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingTop: 16,
-            borderTopColor: THEME.border,
-            borderTopWidth: 1,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: status.color,
-                marginRight: 10,
-              }}
-            />
-            <Text
-              style={{
-                color: THEME.textPrimary,
-                fontWeight: "700",
-                fontSize: 14,
-              }}
-            >
-              Status: {status.label}
-            </Text>
-          </View>
-          <Feather name={status.icon as any} size={18} color={status.color} />
-        </View>
-      </View>
-
-      {/* Category breakdown stats */}
-      {stats.budgetCount > 0 && (
-        <View
-          style={{
-            backgroundColor: THEME.surface,
-            borderRadius: 20,
-            padding: 20,
-            borderColor: THEME.border,
-            borderWidth: 1,
-            marginTop: 16,
-          }}
-        >
-          <Text
-            style={{
-              color: THEME.textPrimary,
-              fontWeight: "700",
-              fontSize: 14,
-              marginBottom: 16,
-            }}
-          >
-            Category Status ({stats.budgetCount})
-          </Text>
-
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-around" }}
-          >
-            {/* On Track */}
-            <View style={{ alignItems: "center" }}>
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 12,
-                  backgroundColor: `${THEME.success}20`,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    color: THEME.success,
-                    fontSize: 24,
-                    fontWeight: "700",
-                  }}
-                >
-                  {stats.onTrack}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  color: THEME.textSecondary,
-                  fontSize: 12,
-                  fontWeight: "500",
-                }}
-              >
-                On Track
-              </Text>
-            </View>
-
-            {/* Warning */}
-            <View style={{ alignItems: "center" }}>
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 12,
-                  backgroundColor: `${THEME.warning}20`,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    color: THEME.warning,
-                    fontSize: 24,
-                    fontWeight: "700",
-                  }}
-                >
-                  {stats.warning}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  color: THEME.textSecondary,
-                  fontSize: 12,
-                  fontWeight: "500",
-                }}
-              >
-                Warning
-              </Text>
-            </View>
-
-            {/* Danger */}
-            <View style={{ alignItems: "center" }}>
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 12,
-                  backgroundColor: `${THEME.danger}20`,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    color: THEME.danger,
-                    fontSize: 24,
-                    fontWeight: "700",
-                  }}
-                >
-                  {stats.danger}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  color: THEME.textSecondary,
-                  fontSize: 12,
-                  fontWeight: "500",
-                }}
-              >
-                Over Budget
-              </Text>
-            </View>
-          </View>
-        </View>
-      )}
+      )} */}
     </View>
   );
 }
