@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.AbstractMap;
 import java.util.Map;
 
@@ -134,6 +136,27 @@ class TransactionControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.transaction", hasSize(1)))
                 .andExpect(jsonPath("$.data.transaction[0].name").value("Lunch"));
+    }
+
+    // Asserts transaction summary carries previous month's income forward into the current month.
+    @Test
+    void getTransactions_currentMonthFallsBackToPreviousIncome() throws Exception {
+        User user = createUser("tx-income-carry@example.com", "Password123!", "tx-income-carry");
+        LocalDate currentUtc = LocalDate.now(ZoneOffset.UTC);
+        LocalDate previousUtc = currentUtc.minusMonths(1);
+
+        createMonthlyIncome(
+                user,
+                LocalDate.of(previousUtc.getYear(), previousUtc.getMonthValue(), 1).atStartOfDay().toInstant(ZoneOffset.UTC),
+                3500.0);
+
+        mockMvc.perform(get("/api/transactions")
+                        .header(authHeaderName(), authHeader(user))
+                        .param("currentMonth", String.valueOf(currentUtc.getMonthValue() - 1))
+                        .param("currentYear", String.valueOf(currentUtc.getYear())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.summary.monthlyIncome").value(3500.0));
     }
 
     // Asserts get transactions endpoint rejects unauthenticated access.

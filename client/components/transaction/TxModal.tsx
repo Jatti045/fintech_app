@@ -1,5 +1,4 @@
 import {
-  useAuth,
   useBudgets,
   useTheme,
   useTransactionMonthSummary,
@@ -21,11 +20,9 @@ import {
 } from "react-native";
 import { getModalHeight, MODAL_BORDER_RADIUS } from "@/constants/appConfig";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { JSX } from "react/jsx-runtime";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState, useEffect, useRef } from "react";
 import ModalCloseButton from "../global/modalCloseButton";
-import type { IBudget } from "@/types/budget/types";
 import { capitalizeFirst } from "@/utils/helper";
 import { useTransactionOperations } from "@/hooks/transaction/useTransactionOperation";
 import {
@@ -47,7 +44,6 @@ function TransactionModal({
   onClose?: () => void;
 }) {
   const budgets = useBudgets();
-  const { user } = useAuth();
   const monthSummary = useTransactionMonthSummary();
   const { THEME } = useTheme();
   const { showAlert } = useThemedAlert();
@@ -162,7 +158,7 @@ function TransactionModal({
     };
   }, [txAmount, txCurrency, userCurrency]);
 
-  const monthlyIncome = Number(user?.monthlyIncome ?? 0);
+  const monthlyIncome = Number(monthSummary.monthlyIncome ?? 0);
   const currentMonthSpent = Number(monthSummary.totalAmount ?? 0);
   const pendingAmount = Number(convertedAmountForPreview || 0);
   const projectedSpent =

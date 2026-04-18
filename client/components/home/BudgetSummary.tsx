@@ -137,7 +137,7 @@ export default function BudgetSummary() {
         Budget Summary
       </Text>
 
-      {sortedBudgets.slice(0, 3).map((b: any) => (
+      {sortedBudgets.map((b: any) => (
         <View
           key={b.id}
           style={{

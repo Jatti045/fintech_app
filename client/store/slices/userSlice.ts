@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { userAPI } from "../../api/user";
+import { userAPI } from "@/api/user";
 import { extractErrorMessage } from "@/utils/extractErrorMessage";
 import type {
   ILoginData,
@@ -62,8 +62,7 @@ export const deleteUserAccount = createAsyncThunk(
   "user/deleteAccount",
   async (userId: string, { rejectWithValue }) => {
     try {
-      const response = await userAPI.deleteAccount(userId);
-      return response;
+      return await userAPI.deleteAccount(userId);
     } catch (error: unknown) {
       return rejectWithValue(
         extractErrorMessage(error, "Account deletion failed"),
@@ -141,8 +140,7 @@ export const changePassword = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const response = await userAPI.changePassword(payload);
-      return response;
+      return await userAPI.changePassword(payload);
     } catch (error: unknown) {
       return rejectWithValue(
         extractErrorMessage(error, "Change password failed"),
@@ -167,9 +165,9 @@ export const updateUserCurrency = createAsyncThunk(
 
 export const updateUserMonthlyIncome = createAsyncThunk(
   "user/updateMonthlyIncome",
-  async (monthlyIncome: number, { rejectWithValue }) => {
+  async ({ monthlyIncome, month, year }: { monthlyIncome: number; month: number; year: number }, { rejectWithValue }) => {
     try {
-      const response = await userAPI.updateMonthlyIncome(monthlyIncome);
+      const response = await userAPI.updateMonthlyIncome({ monthlyIncome, month, year });
       return response.data;
     } catch (error: unknown) {
       return rejectWithValue(
@@ -183,8 +181,7 @@ export const forgotPassword = createAsyncThunk(
   "user/forgotPassword",
   async (payload: { email: string }, { rejectWithValue }) => {
     try {
-      const response = await userAPI.forgotPassword(payload);
-      return response;
+      return await userAPI.forgotPassword(payload);
     } catch (error: unknown) {
       return rejectWithValue(
         extractErrorMessage(error, "Forgot password failed"),
@@ -206,8 +203,7 @@ export const resetPassword = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const response = await userAPI.resetPassword(payload);
-      return response;
+      return await userAPI.resetPassword(payload);
     } catch (error: unknown) {
       return rejectWithValue(
         extractErrorMessage(error, "Reset password failed"),
@@ -368,7 +364,7 @@ const userSlice = createSlice({
         // handled by local component state (e.g., `deleting` in Profile screen)
         state.error = null;
       })
-      .addCase(deleteProfilePicture.fulfilled, (state, action) => {
+      .addCase(deleteProfilePicture.fulfilled, (state) => {
         if (state.user) state.user.profilePic = null;
         state.error = null;
       })
@@ -415,9 +411,13 @@ const userSlice = createSlice({
       })
       .addCase(updateUserMonthlyIncome.fulfilled, (state, action) => {
         if (state.user && action.payload) {
+          const payloadAny = action.payload as any;
+          const resolvedMonthlyIncome = Number(
+            payloadAny?.monthlyIncome ?? payloadAny?.data?.monthlyIncome ?? 0,
+          );
           state.user = {
             ...state.user,
-            monthlyIncome: Number((action.payload as any).monthlyIncome ?? 0),
+            monthlyIncome: resolvedMonthlyIncome,
           };
         }
         state.error = null;

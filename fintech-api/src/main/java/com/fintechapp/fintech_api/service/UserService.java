@@ -1,5 +1,7 @@
 package com.fintechapp.fintech_api.service;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Locale;
 
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,7 @@ public class UserService {
     private final BudgetRepository budgetRepository;
     private final GoalRepository goalRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final MonthlyIncomeService monthlyIncomeService;
     private final PasswordEncoder passwordEncoder;
     private final CloudinaryService cloudinaryService;
     private final UploadValidationService uploadValidationService;
@@ -44,6 +47,7 @@ public class UserService {
             BudgetRepository budgetRepository,
             GoalRepository goalRepository,
             PasswordResetTokenRepository passwordResetTokenRepository,
+            MonthlyIncomeService monthlyIncomeService,
             PasswordEncoder passwordEncoder,
             CloudinaryService cloudinaryService,
             UploadValidationService uploadValidationService) {
@@ -52,6 +56,7 @@ public class UserService {
         this.budgetRepository = budgetRepository;
         this.goalRepository = goalRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.monthlyIncomeService = monthlyIncomeService;
         this.passwordEncoder = passwordEncoder;
         this.cloudinaryService = cloudinaryService;
         this.uploadValidationService = uploadValidationService;
@@ -60,6 +65,24 @@ public class UserService {
     public UserDataResponse getCurrentUser(AuthenticatedUser authenticatedUser) {
         User user = requireCurrentUser(authenticatedUser);
         return new UserDataResponse(true, "Current user fetched successfully.", toUserSummary(user));
+    }
+
+    public UserDataResponse getMonthlyIncomeForMonth(
+            AuthenticatedUser authenticatedUser,
+            String monthRaw,
+            String yearRaw) {
+        User user = requireCurrentUser(authenticatedUser);
+
+        Integer month = parseInteger(monthRaw);
+        Integer year = parseInteger(yearRaw);
+        if (month == null || year == null || month < 0 || month > 11 || year <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Month and year query parameters are required");
+        }
+
+        return new UserDataResponse(
+                true,
+                "Monthly income fetched successfully.",
+                toUserSummary(user, year, month));
     }
 
     @Transactional
@@ -72,6 +95,7 @@ public class UserService {
         budgetRepository.deleteByUser_Id(userId);
         goalRepository.deleteByUser_Id(userId);
         passwordResetTokenRepository.deleteByUser_Id(userId);
+        monthlyIncomeService.deleteByUserId(userId);
         userRepository.delete(existingUser);
 
         return new ApiMessageResponse(true, "User account and related data deleted successfully.");
@@ -172,9 +196,15 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Monthly income must be a non-negative number.");
         }
 
-        user.setMonthlyIncome(request.monthlyIncome());
-        User updatedUser = userRepository.save(user);
-        return new UserDataResponse(true, "Monthly income updated successfully.", toUserSummary(updatedUser));
+        Integer month = request.month();
+        Integer year = request.year();
+        if (month == null || year == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Month and year are required");
+        }
+
+        monthlyIncomeService.upsertForMonth(user, year, month, request.monthlyIncome());
+
+        return new UserDataResponse(true, "Monthly income updated successfully.", toUserSummary(user, year, month));
     }
 
     private User requireCurrentUser(AuthenticatedUser authenticatedUser) {
@@ -197,15 +227,37 @@ public class UserService {
     }
 
     private UserSummaryResponse toUserSummary(User user) {
+        double currentMonthlyIncome = monthlyIncomeService.resolveForCurrentMonth(user);
+        return toUserSummary(user, currentMonthlyIncome);
+    }
+
+    private UserSummaryResponse toUserSummary(User user, int year, int month) {
+        double monthlyIncome = monthlyIncomeService.resolveForMonth(user, year, month);
+        return toUserSummary(user, monthlyIncome);
+    }
+
+    private UserSummaryResponse toUserSummary(User user, double monthlyIncome) {
         return new UserSummaryResponse(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getProfilePic(),
                 user.getCurrency(),
-                user.getMonthlyIncome(),
+                monthlyIncome,
                 user.getCreatedAt(),
                 user.getUpdatedAt());
+    }
+
+    private Integer parseInteger(String raw) {
+        if (!StringUtils.hasText(raw)) {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(raw.trim());
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     private ProfilePictureUserResponse toProfilePictureUser(User user) {
@@ -217,4 +269,5 @@ public class UserService {
                 user.getCreatedAt(),
                 user.getUpdatedAt());
     }
+
 }

@@ -125,7 +125,7 @@ export default function GoalSummary() {
         Goal Summary
       </Text>
 
-      {sortedGoals.slice(0, 3).map((g: any) => (
+      {sortedGoals.map((g: any) => (
         <View
           key={g.id}
           style={{

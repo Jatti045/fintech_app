@@ -35,18 +35,21 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final MonthlyIncomeService monthlyIncomeService;
 
     public AuthService(
             UserRepository userRepository,
             PasswordResetTokenRepository passwordResetTokenRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            EmailService emailService) {
+            EmailService emailService,
+            MonthlyIncomeService monthlyIncomeService) {
         this.userRepository = userRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.monthlyIncomeService = monthlyIncomeService;
     }
 
     @Transactional
@@ -185,7 +188,7 @@ public class AuthService {
                 user.getEmail(),
                 user.getProfilePic(),
                 user.getCurrency(),
-                user.getMonthlyIncome(),
+                monthlyIncomeService.resolveForCurrentMonth(user),
                 user.getCreatedAt(),
                 user.getUpdatedAt());
     }

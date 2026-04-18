@@ -2,7 +2,7 @@
   "expo": {
     "name": "Budgee",
     "slug": "budgee-app",
-    "version": "2.0.1",
+    "version": "2.0.3",
     "description": "Budgee — budgeting made easy",
     "orientation": "portrait",
     "privacy": "public",
@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.budgee.finance",
-      "versionCode": 23,
+      "versionCode": 25,
       "permissions": ["INTERNET", "ACCESS_NETWORK_STATE", "CAMERA"],
       "blockedPermissions": ["RECORD_AUDIO"]
     },
