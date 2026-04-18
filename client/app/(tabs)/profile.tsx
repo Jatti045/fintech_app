@@ -38,6 +38,7 @@ export default function ProfileScreen() {
     currencyPickerOpen,
     setCurrencyPickerOpen,
     handleCurrencySelect,
+    selectedMonthLabel,
     monthlyIncomeInput,
     setMonthlyIncomeInput,
     handleSaveMonthlyIncome,
@@ -115,6 +116,9 @@ export default function ProfileScreen() {
             <Text style={{ color: THEME.textSecondary }} className="mb-3">
               Set your monthly income to see net spending when creating
               transactions.
+            </Text>
+            <Text style={{ color: THEME.textSecondary }} className="mb-3">
+              Viewing income for {selectedMonthLabel}.
             </Text>
             <TextInput
               value={monthlyIncomeInput}

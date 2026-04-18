@@ -49,18 +49,21 @@ public class TransactionService {
     private final GoalAllocationRepository goalAllocationRepository;
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final MonthlyIncomeService monthlyIncomeService;
 
     public TransactionService(
             BudgetRepository budgetRepository,
             GoalRepository goalRepository,
             GoalAllocationRepository goalAllocationRepository,
             TransactionRepository transactionRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            MonthlyIncomeService monthlyIncomeService) {
         this.budgetRepository = budgetRepository;
         this.goalRepository = goalRepository;
         this.goalAllocationRepository = goalAllocationRepository;
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
+        this.monthlyIncomeService = monthlyIncomeService;
     }
 
     /**
@@ -120,7 +123,7 @@ public class TransactionService {
                 params.currentYear(),
                 params.currentMonth());
         double totalAmount = transactionsExpenseTotal + goalAllocationTotal;
-        double monthlyIncome = user.getMonthlyIncome();
+        double monthlyIncome = resolveMonthlyIncomeForSummary(user, params.currentYear(), params.currentMonth());
         double netRemaining = monthlyIncome - totalAmount;
         double spentPercentage = monthlyIncome > 0 ? (totalAmount / monthlyIncome) * 100 : 0;
 
@@ -548,7 +551,7 @@ public class TransactionService {
             monthExpenseTotal = savedOrUpdated.getAmount();
         }
 
-        double monthlyIncome = user.getMonthlyIncome();
+        double monthlyIncome = resolveMonthlyIncomeForMonth(user, year, month);
         double netRemaining = monthlyIncome - monthExpenseTotal;
         double spentPercentage = monthlyIncome > 0 ? (monthExpenseTotal / monthlyIncome) * 100 : 0;
 
@@ -649,6 +652,23 @@ public class TransactionService {
         Instant from = monthStart(year, month);
         Instant to = nextMonthStart(year, month);
         return goalAllocationRepository.sumAllocatedByUserAndAllocatedAtBetween(userId, from, to);
+    }
+
+    private double resolveMonthlyIncomeForSummary(User user, String yearRaw, String monthRaw) {
+        Integer month = parseInteger(monthRaw);
+        Integer year = parseInteger(yearRaw);
+
+        if (month == null || year == null || month < 0 || month > 11 || year <= 0) {
+            LocalDate utcNow = LocalDate.now(ZoneOffset.UTC);
+            month = utcNow.getMonthValue() - 1;
+            year = utcNow.getYear();
+        }
+
+        return resolveMonthlyIncomeForMonth(user, year, month);
+    }
+
+    private double resolveMonthlyIncomeForMonth(User user, int year, int month) {
+        return monthlyIncomeService.resolveForMonth(user, year, month);
     }
 
     private int normalizePage(String rawPage) {

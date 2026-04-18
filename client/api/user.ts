@@ -193,11 +193,19 @@ class UserAPI extends BaseAPI {
   }
 
   async updateMonthlyIncome(
-    monthlyIncome: number,
+    {
+      monthlyIncome,
+      month,
+      year,
+    }: {
+      monthlyIncome: number;
+      month: number;
+      year: number;
+    },
   ): Promise<IApiResponse<IUser>> {
     const response = await this.makeRequest<IUser>("/users/me/monthly-income", {
       method: "PATCH",
-      data: { monthlyIncome },
+      data: { monthlyIncome, month, year },
     });
 
     if (response?.data) {
@@ -212,6 +220,19 @@ class UserAPI extends BaseAPI {
     }
 
     return response;
+  }
+
+  async getMonthlyIncome({
+    month,
+    year,
+  }: {
+    month: number;
+    year: number;
+  }): Promise<IApiResponse<IUser>> {
+    return this.makeRequest<IUser>("/users/me/monthly-income", {
+      method: "GET",
+      params: { month, year },
+    });
   }
 
   // Utility Methods
@@ -251,5 +272,3 @@ class UserAPI extends BaseAPI {
 // Export singleton instance
 export const userAPI = new UserAPI();
 
-// Export default
-export default userAPI;

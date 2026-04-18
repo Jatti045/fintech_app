@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { router } from "expo-router";
 
-import { useAppDispatch, useAuth, useTheme } from "@/hooks/useRedux";
+import { useAppDispatch, useAuth, useCalendar, useTheme } from "@/hooks/useRedux";
 import {
   deleteUserAccount,
   logoutUser,
@@ -56,6 +56,9 @@ export interface UseProfileReturn {
   setCurrencyPickerOpen: (open: boolean) => void;
   handleCurrencySelect: (code: string) => void;
 
+  /** Selected calendar context */
+  selectedMonthLabel: string;
+
   /** Monthly income input + save */
   monthlyIncomeInput: string;
   setMonthlyIncomeInput: (value: string) => void;
@@ -82,6 +85,7 @@ export interface UseProfileReturn {
 export function useProfile(): UseProfileReturn {
   const dispatch = useAppDispatch();
   const { user, error } = useAuth();
+  const calendar = useCalendar();
   const { THEME, selectedTheme } = useTheme();
   const { showAlert } = useThemedAlert();
 
@@ -93,13 +97,29 @@ export function useProfile(): UseProfileReturn {
   const [currencyPickerOpen, setCurrencyPickerOpen] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
   const [monthlyIncomeSaving, setMonthlyIncomeSaving] = useState(false);
-  const [monthlyIncomeInput, setMonthlyIncomeInput] = useState(
-    String(user?.monthlyIncome ?? ""),
-  );
+  const [monthlyIncomeInput, setMonthlyIncomeInput] = useState("");
+  const selectedMonthLabel = `${calendar.year}-${String(calendar.month + 1).padStart(2, "0")}`;
+
+  const loadMonthlyIncomeForSelectedMonth = useCallback(async () => {
+    if (!user?.id) {
+      setMonthlyIncomeInput("");
+      return;
+    }
+
+    try {
+      const response = await userAPI.getMonthlyIncome({
+        month: calendar.month,
+        year: calendar.year,
+      });
+      setMonthlyIncomeInput(String(Number(response?.data?.monthlyIncome ?? 0)));
+    } catch {
+      setMonthlyIncomeInput("");
+    }
+  }, [user?.id, calendar.month, calendar.year]);
 
   useEffect(() => {
-    setMonthlyIncomeInput(String(user?.monthlyIncome ?? ""));
-  }, [user?.monthlyIncome]);
+    loadMonthlyIncomeForSelectedMonth();
+  }, [loadMonthlyIncomeForSelectedMonth]);
 
   // ── show Redux-level errors as alerts ────────────────────────────────────
   useEffect(() => {
@@ -111,10 +131,11 @@ export function useProfile(): UseProfileReturn {
     setRefreshing(true);
     try {
       await dispatch(loadUserFromStorage());
+      await loadMonthlyIncomeForSelectedMonth();
     } finally {
       setRefreshing(false);
     }
-  }, [dispatch]);
+  }, [dispatch, loadMonthlyIncomeForSelectedMonth]);
 
   // ── avatar ───────────────────────────────────────────────────────────────
   const handlePickImage = useCallback(async () => {
@@ -264,8 +285,15 @@ export function useProfile(): UseProfileReturn {
 
     setMonthlyIncomeSaving(true);
     try {
-      const result = await dispatch(updateUserMonthlyIncome(parsed));
+      const result = await dispatch(
+        updateUserMonthlyIncome({
+          monthlyIncome: parsed,
+          month: calendar.month,
+          year: calendar.year,
+        }),
+      );
       if (updateUserMonthlyIncome.fulfilled.match(result)) {
+        await loadMonthlyIncomeForSelectedMonth();
         showAlert({
           title: "Monthly income updated",
           message: `Your monthly income is now ${parsed.toFixed(2)} ${user?.currency || DEFAULT_CURRENCY}.`,
@@ -285,7 +313,15 @@ export function useProfile(): UseProfileReturn {
     } finally {
       setMonthlyIncomeSaving(false);
     }
-  }, [dispatch, monthlyIncomeInput, showAlert, user?.currency]);
+  }, [
+    dispatch,
+    monthlyIncomeInput,
+    showAlert,
+    user?.currency,
+    calendar.month,
+    calendar.year,
+    loadMonthlyIncomeForSelectedMonth,
+  ]);
 
   // ── change password ──────────────────────────────────────────────────────
   const openChangeModal = useCallback(() => setChangeOpen(true), []);
@@ -433,6 +469,7 @@ export function useProfile(): UseProfileReturn {
     currencyPickerOpen,
     setCurrencyPickerOpen,
     handleCurrencySelect,
+    selectedMonthLabel,
     monthlyIncomeInput,
     setMonthlyIncomeInput,
     handleSaveMonthlyIncome,

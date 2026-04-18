@@ -90,6 +90,27 @@ export default function Index() {
     }
   }, [dispatch, calendar.month, calendar.year]);
 
+  useEffect(() => {
+    void Promise.all([
+      dispatch(
+        fetchTransaction({
+          searchQuery: "",
+          currentMonth: calendar.month,
+          currentYear: calendar.year,
+          page: 1,
+          limit: PAGINATION_LIMIT,
+          useCache: true,
+        }),
+      ),
+      dispatch(
+        fetchBudgets({
+          currentMonth: calendar.month,
+          currentYear: calendar.year,
+        }),
+      ),
+    ]);
+  }, [dispatch, calendar.month, calendar.year]);
+
   const monthStartDate = useMemo(
     () => new Date(calendar.year, calendar.month, 1),
     [calendar.year, calendar.month],
@@ -116,7 +137,7 @@ export default function Index() {
   // Uses backend month summary (all month records), then converts it to the
   // current default currency for display.
   const expenseTotal = convertedExpenseTotal;
-  const monthlyIncome = Number(user?.monthlyIncome || 0);
+  const monthlyIncome = Number(monthSummary.monthlyIncome || 0);
 
   useEffect(() => {
     let cancelled = false;

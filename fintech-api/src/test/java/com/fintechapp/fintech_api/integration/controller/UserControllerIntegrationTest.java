@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Map;
 
 import org.junit.jupiter.api.Disabled;
@@ -109,6 +111,60 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                         .content(asJson(Map.of("currency", "USD"))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // Asserts update monthly income succeeds for current month/year only.
+    @Test
+    void updateMonthlyIncome_currentMonthYear_returnsUpdatedUser() throws Exception {
+        User user = createUser("user-monthly-income@example.com", "Password123!", "user-monthly-income");
+        LocalDate utcNow = LocalDate.now(ZoneOffset.UTC);
+
+        mockMvc.perform(patch("/api/users/me/monthly-income")
+                        .header(authHeaderName(), authHeader(user))
+                        .contentType(json())
+                        .content(asJson(Map.of(
+                                "monthlyIncome", 4200.0,
+                                "month", utcNow.getMonthValue() - 1,
+                                "year", utcNow.getYear()
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.monthlyIncome").value(4200.0));
+
+        java.time.Instant monthStart = LocalDate.of(utcNow.getYear(), utcNow.getMonthValue(), 1)
+                .atStartOfDay()
+                .toInstant(ZoneOffset.UTC);
+        com.fintechapp.fintech_api.model.UserMonthlyIncome savedIncome = userMonthlyIncomeRepository
+                .findByUser_IdAndMonthStart(user.getId(), monthStart)
+                .orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals(4200.0, savedIncome.getIncome());
+    }
+
+    // Asserts update monthly income persists for an arbitrary selected month/year.
+    @Test
+    void updateMonthlyIncome_previousMonth_returnsUpdatedUser() throws Exception {
+        User user = createUser("user-monthly-income-restricted@example.com", "Password123!", "user-monthly-income-restricted");
+        LocalDate previousMonth = LocalDate.now(ZoneOffset.UTC).minusMonths(1);
+
+        mockMvc.perform(patch("/api/users/me/monthly-income")
+                        .header(authHeaderName(), authHeader(user))
+                        .contentType(json())
+                        .content(asJson(Map.of(
+                                "monthlyIncome", 4200.0,
+                                "month", previousMonth.getMonthValue() - 1,
+                                "year", previousMonth.getYear()
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.monthlyIncome").value(4200.0));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/users/me/monthly-income")
+                        .header(authHeaderName(), authHeader(user))
+                        .param("month", String.valueOf(previousMonth.getMonthValue() - 1))
+                        .param("year", String.valueOf(previousMonth.getYear())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.monthlyIncome").value(4200.0));
     }
 
     // Asserts delete profile picture succeeds and clears persisted profilePic.

@@ -18,10 +18,12 @@ import com.fintechapp.fintech_api.model.Goal;
 import com.fintechapp.fintech_api.model.Transaction;
 import com.fintechapp.fintech_api.model.TransactionType;
 import com.fintechapp.fintech_api.model.User;
+import com.fintechapp.fintech_api.model.UserMonthlyIncome;
 import com.fintechapp.fintech_api.repository.BudgetRepository;
 import com.fintechapp.fintech_api.repository.GoalRepository;
 import com.fintechapp.fintech_api.repository.PasswordResetTokenRepository;
 import com.fintechapp.fintech_api.repository.TransactionRepository;
+import com.fintechapp.fintech_api.repository.UserMonthlyIncomeRepository;
 import com.fintechapp.fintech_api.repository.UserRepository;
 
 @SpringBootTest
@@ -50,6 +52,9 @@ public abstract class BaseIntegrationTest {
 
     @Autowired
     protected TransactionRepository transactionRepository;
+
+    @Autowired
+    protected UserMonthlyIncomeRepository userMonthlyIncomeRepository;
 
     @Autowired
     protected PasswordResetTokenRepository passwordResetTokenRepository;
@@ -106,6 +111,14 @@ public abstract class BaseIntegrationTest {
         transaction.setAmount(amount);
         transaction.setIcon(budget != null ? budget.getIcon() : null);
         return transactionRepository.save(transaction);
+    }
+
+    protected UserMonthlyIncome createMonthlyIncome(User user, Instant monthStart, double income) {
+        UserMonthlyIncome monthlyIncome = new UserMonthlyIncome();
+        monthlyIncome.setUser(user);
+        monthlyIncome.setMonthStart(monthStart);
+        monthlyIncome.setIncome(income);
+        return userMonthlyIncomeRepository.save(monthlyIncome);
     }
 
     protected String asJson(Object payload) throws Exception {

@@ -6,8 +6,10 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 
 @Component
+@SuppressWarnings("SqlNoDataSourceInspection")
 public class DatabaseSchemaAutoPatch implements ApplicationRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(DatabaseSchemaAutoPatch.class);
@@ -19,15 +21,27 @@ public class DatabaseSchemaAutoPatch implements ApplicationRunner {
     }
 
     @Override
-    public void run(ApplicationArguments args) {
-        // Safety patch for existing databases that predate monthly income support.
-        // Keeps startup backward-compatible even when schema migrations were not
-        // applied.
-        jdbcTemplate.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_income DOUBLE PRECISION");
-        jdbcTemplate.execute("UPDATE users SET monthly_income = 0 WHERE monthly_income IS NULL");
-        jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN monthly_income SET DEFAULT 0");
-        jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN monthly_income SET NOT NULL");
+    public void run(@NonNull ApplicationArguments args) {
+        // Safety patch for month-scoped user income persistence.
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS user_monthly_incomes (
+                    id VARCHAR(36) PRIMARY KEY,
+                    user_id VARCHAR(36) NOT NULL,
+                    month_start TIMESTAMP WITH TIME ZONE NOT NULL,
+                    income DOUBLE PRECISION NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                    CONSTRAINT fk_user_monthly_incomes_user
+                        FOREIGN KEY (user_id) REFERENCES users(id),
+                    CONSTRAINT uq_user_monthly_incomes_user_month
+                        UNIQUE (user_id, month_start)
+                )
+                """);
+        jdbcTemplate.execute("""
+                CREATE INDEX IF NOT EXISTS idx_user_monthly_incomes_user_month
+                ON user_monthly_incomes(user_id, month_start)
+                """);
 
-        logger.info("Database schema patch check completed for users.monthly_income");
+        logger.info("Database schema patch check completed for user_monthly_incomes");
     }
 }

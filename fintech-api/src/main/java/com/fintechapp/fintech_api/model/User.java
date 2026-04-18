@@ -49,9 +49,6 @@ public class User {
     @Column(nullable = false)
     private String currency = "USD";
 
-    @Column(name = "monthly_income", nullable = false)
-    private double monthlyIncome = 0;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -71,4 +68,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private Set<Goal> goals = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<UserMonthlyIncome> monthlyIncomes = new HashSet<>();
 }
