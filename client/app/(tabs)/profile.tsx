@@ -77,7 +77,7 @@ export default function ProfileScreen() {
           onDeleteImage={handleDeleteImage}
         />
 
-        <BankConnections THEME={THEME} />
+        {/*<BankConnections THEME={THEME} />*/}
 
         {/* Settings */}
         <View className="mb-8">

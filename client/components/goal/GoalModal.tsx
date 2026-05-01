@@ -14,6 +14,7 @@ import { useTheme } from "@/hooks/useRedux";
 import ModalCloseButton from "@/components/global/modalCloseButton";
 import IconSelectorModal from "@/components/budget/IconSelectorModal";
 import type { IGoal } from "@/types/goal/types";
+import Loader from "@/utils/loader";
 
 interface GoalModalProps {
   openSheet: boolean;
@@ -212,6 +213,7 @@ function GoalModal({
               </TouchableOpacity>
             </View>
           </ScrollView>
+            {saving && <Loader msg="Saving goal..." />}
         </SafeAreaView>
       </View>
     </Modal>

@@ -229,16 +229,16 @@ export default function Index() {
   };
 
   // Show skeleton loader during initial data fetch
-  if (isInitialLoading) {
-    return (
-      <SafeAreaView
-        edges={["left", "right"]}
-        style={{ flex: 1, backgroundColor: THEME.background }}
-      >
-        <HomeSkeleton />
-      </SafeAreaView>
-    );
-  }
+  // if (isInitialLoading) {
+  //   return (
+  //     <SafeAreaView
+  //       edges={["left", "right"]}
+  //       style={{ flex: 1, backgroundColor: THEME.background }}
+  //     >
+  //       <HomeSkeleton />
+  //     </SafeAreaView>
+  //   );
+  // }
 
   return (
     <SafeAreaView

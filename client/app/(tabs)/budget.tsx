@@ -99,17 +99,17 @@ export default function BudgetScreen() {
   const hasBudgets = budgets && budgets.length > 0;
 
   // Show skeleton loader during initial data fetch
-  if (isInitialLoading) {
-    return (
-      <SafeAreaView
-        edges={["left", "right"]}
-        className="flex-1"
-        style={{ backgroundColor: THEME.background }}
-      >
-        <BudgetSkeleton />
-      </SafeAreaView>
-    );
-  }
+  // if (isInitialLoading) {
+  //   return (
+  //     <SafeAreaView
+  //       edges={["left", "right"]}
+  //       className="flex-1"
+  //       style={{ backgroundColor: THEME.background }}
+  //     >
+  //       <BudgetSkeleton />
+  //     </SafeAreaView>
+  //   );
+  // }
 
   return (
     <SafeAreaView
@@ -156,7 +156,7 @@ export default function BudgetScreen() {
         }
       >
         {/* Budget overview header */}
-        <BudgetOverviewHeader />
+        {/*<BudgetOverviewHeader />*/}
         {/* Budget cards or empty state */}
         {hasBudgets ? (
           filteredBudgets.length > 0 ? (

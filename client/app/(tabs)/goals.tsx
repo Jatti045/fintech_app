@@ -335,17 +335,17 @@ export default function GoalsScreen() {
 
   const hasGoals = goals && goals.length > 0;
 
-  if (isInitialLoading) {
-    return (
-      <SafeAreaView
-        edges={["left", "right"]}
-        className="flex-1"
-        style={{ backgroundColor: THEME.background }}
-      >
-        <BudgetSkeleton />
-      </SafeAreaView>
-    );
-  }
+  // if (isInitialLoading) {
+  //   return (
+  //     <SafeAreaView
+  //       edges={["left", "right"]}
+  //       className="flex-1"
+  //       style={{ backgroundColor: THEME.background }}
+  //     >
+  //       <BudgetSkeleton />
+  //     </SafeAreaView>
+  //   );
+  // }
 
   return (
     <SafeAreaView
@@ -390,7 +390,7 @@ export default function GoalsScreen() {
         }
       >
         {/* Goal overview header */}
-        <GoalOverviewHeader />
+        {/*<GoalOverviewHeader />*/}
         {hasGoals ? (
           filteredGoals.length > 0 ? (
             filteredGoals.map((goal) => (
