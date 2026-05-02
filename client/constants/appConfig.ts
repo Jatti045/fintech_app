@@ -36,7 +36,7 @@ export const OTP_RESEND_COOLDOWN_S = 60;
  * Calculate modal height as 50% of screen height.
  * Used for half-screen modal presentations.
  */
-export const getModalHeight = () => Dimensions.get("window").height * 0.7;
+export const getModalHeight = () => Dimensions.get("window").height * 0.8;
 
 /**
  * Modal border radius for rounded top corners.
