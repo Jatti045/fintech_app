@@ -348,20 +348,6 @@ export default function TransactionScreen() {
     [THEME.textSecondary],
   );
 
-  // Show skeleton loader during initial data fetch.
-  // This must remain after all hooks above so hook order never changes.
-  // if (isInitialLoading) {
-  //   return (
-  //     <SafeAreaView
-  //       edges={["left", "right"]}
-  //       style={{ backgroundColor: THEME.background, flex: 1 }}
-  //       className="px-4"
-  //     >
-  //       <TransactionSkeleton />
-  //     </SafeAreaView>
-  //   );
-  // }
-
   return (
     <SafeAreaView
       edges={["left", "right"]}
