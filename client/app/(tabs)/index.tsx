@@ -228,18 +228,6 @@ export default function Index() {
     setOpenTxModal(true);
   };
 
-  // Show skeleton loader during initial data fetch
-  // if (isInitialLoading) {
-  //   return (
-  //     <SafeAreaView
-  //       edges={["left", "right"]}
-  //       style={{ flex: 1, backgroundColor: THEME.background }}
-  //     >
-  //       <HomeSkeleton />
-  //     </SafeAreaView>
-  //   );
-  // }
-
   return (
     <SafeAreaView
       edges={["left", "right"]}
@@ -289,12 +277,6 @@ export default function Index() {
 
         {/* Budget health score gauge (0–100) */}
         <BudgetHealthScore />
-
-        {/* Chart showing top spending categories for the month, with bars colored by budget ratio */}
-        {/* <TopCategoriesChart label="Top Categories" totals={categoryTotals} /> */}
-
-        {/* List of 5 most recent transactions across all months */}
-        {/* <RecentTransactions transactions={recentTransactions} /> */}
 
         {/* Extra spacing at bottom to ensure last item isn't cut off */}
         <View style={{ height: 80 }} />
