@@ -98,19 +98,6 @@ export default function BudgetScreen() {
 
   const hasBudgets = budgets && budgets.length > 0;
 
-  // Show skeleton loader during initial data fetch
-  // if (isInitialLoading) {
-  //   return (
-  //     <SafeAreaView
-  //       edges={["left", "right"]}
-  //       className="flex-1"
-  //       style={{ backgroundColor: THEME.background }}
-  //     >
-  //       <BudgetSkeleton />
-  //     </SafeAreaView>
-  //   );
-  // }
-
   return (
     <SafeAreaView
       edges={["left", "right"]}
@@ -165,12 +152,12 @@ export default function BudgetScreen() {
                 key={budget.id}
                 budget={budget}
                 displayLimit={Number(
-                  (budget as any).displayLimit ?? budget.limit,
+                  (budget).displayLimit ?? budget.limit,
                 )}
                 displaySpent={Number(
-                  (budget as any).displaySpent ?? budget.spent,
+                  (budget).displaySpent ?? budget.spent,
                 )}
-                currencyCode={(budget as any).displayCurrency || activeCurrency}
+                currencyCode={(budget).displayCurrency || activeCurrency}
                 onEdit={handleEditPress}
                 onDelete={handleDeleteBudget}
                 surface={THEME.surface}
