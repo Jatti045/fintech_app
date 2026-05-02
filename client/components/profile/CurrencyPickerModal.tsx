@@ -21,7 +21,7 @@ export default function CurrencyPickerModal({
   const modalHeight = getModalHeight();
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="slide" transparent={true}>
       <View
         style={{
           flex: 1,

@@ -68,9 +68,8 @@ function ForgotPasswordModal({
   return (
     <Modal
       animationType="slide"
-      presentationStyle="pageSheet"
-      transparent={true}
       visible={isModalVisible}
+      transparent={true}
     >
       <View
         style={{

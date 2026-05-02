@@ -52,8 +52,7 @@ export default function ChangePasswordModal({
     <Modal
       visible={visible}
       animationType="slide"
-      transparent
-      presentationStyle="pageSheet"
+      transparent={true}
     >
       <View
         style={{

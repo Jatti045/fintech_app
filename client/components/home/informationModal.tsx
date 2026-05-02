@@ -33,8 +33,7 @@ function InformationModal({
     <Modal
       visible={helpOpen}
       animationType="slide"
-      presentationStyle="pageSheet"
-      transparent
+      transparent={true}
     >
       <View
         style={{

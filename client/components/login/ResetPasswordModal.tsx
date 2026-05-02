@@ -107,7 +107,6 @@ function ResetPasswordModal({
       visible={visible}
       animationType="slide"
       transparent={true}
-      presentationStyle="pageSheet"
     >
       <View
         style={{

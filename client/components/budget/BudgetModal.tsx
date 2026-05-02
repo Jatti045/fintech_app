@@ -77,8 +77,7 @@ function BudgetModal({
     <Modal
       visible={openSheet}
       animationType="slide"
-      presentationStyle="pageSheet"
-      transparent
+      transparent={true}
     >
       <View
         style={{

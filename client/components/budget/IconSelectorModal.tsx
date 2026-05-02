@@ -58,7 +58,6 @@ const IconSelectorModal = ({
       visible={openIconSelector}
       animationType="slide"
       transparent={true}
-      presentationStyle="pageSheet"
     >
       <View
         style={{
