@@ -6,12 +6,12 @@ import type { IGoal } from "@/types/goal/types";
 import { formatCurrency } from "@/utils/helper";
 import { hapticHeavy, hapticLight } from "@/utils/haptics";
 import SwipeableRow from "@/components/global/SwipeableRow";
+import useGoalOperation from "@/hooks/goal/useGoalOperation";
 
 export interface GoalBudgetCardProps {
   goal: IGoal;
   currency: string;
   onEdit: (goal: IGoal) => void;
-  onDelete: (goal: IGoal) => void;
   onAllocate: (goal: IGoal) => void;
   onDeallocate: (goal: IGoal) => void;
   surface: string;
@@ -28,7 +28,6 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
   goal,
   currency,
   onEdit,
-  onDelete,
   onAllocate,
   onDeallocate,
   surface,
@@ -49,9 +48,12 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
   const achieved = goal.achieved || remaining <= 0;
   const safeIconName = (goal.icon || "flag") as keyof typeof Feather.glyphMap;
 
+  const {handleDeleteGoal} = useGoalOperation();
+
+
   return (
     <SwipeableRow
-      onDelete={() => onDelete(goal)}
+      onDelete={() => handleDeleteGoal(goal)}
       dangerColor={danger}
       actionStyle={{ marginBottom: 16, borderRadius: 16 }}
     >
@@ -63,7 +65,7 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
         }}
         onLongPress={() => {
           hapticHeavy();
-          onDelete(goal);
+          handleDeleteGoal(goal);
         }}
       >
         <View

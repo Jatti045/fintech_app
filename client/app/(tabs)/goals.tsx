@@ -41,6 +41,7 @@ import {
 } from "@/components/goal";
 import { BudgetSkeleton } from "@/components/skeleton/SkeletonLoader";
 import SearchBar from "@/components/global/SearchBar";
+import useGoalOperation from "@/hooks/goal/useGoalOperation";
 
 export default function GoalsScreen() {
   const dispatch = useAppDispatch();
@@ -61,9 +62,13 @@ export default function GoalsScreen() {
     "allocate" | "deallocate"
   >("allocate");
 
-  const [goalName, setGoalName] = useState("");
-  const [goalTarget, setGoalTarget] = useState("");
-  const [goalIcon, setGoalIcon] = useState("");
+const {  goalName,
+  setGoalName,
+  goalTarget,
+  setGoalTarget,
+  goalIcon,
+  setGoalIcon} = useGoalOperation();
+
   const [allocateAmount, setAllocateAmount] = useState("");
   const calendar = useCalendar();
   const isInitialLoading = isLoading && goals.length === 0 && !isSearching;
@@ -113,57 +118,6 @@ export default function GoalsScreen() {
     },
     [handleGoalModalClose],
   );
-
-  const submitGoal = useCallback(async () => {
-    const target = Number(goalTarget);
-
-    if (!goalName.trim()) {
-      showAlert({ title: "Goal name is required" });
-      return;
-    }
-
-    if (!target || target <= 0) {
-      showAlert({ title: "Goal target must be a positive number" });
-      return;
-    }
-
-    if (editingGoal) {
-      const result = await dispatch(
-        updateGoal({
-          goalId: editingGoal.id,
-          updates: { name: goalName.trim(), target, icon: goalIcon || null },
-        }),
-      );
-      if (updateGoal.rejected.match(result)) {
-        showAlert({
-          title: "Update failed",
-          message: String(result.payload || "Could not update goal"),
-        });
-        return;
-      }
-    } else {
-      const result = await dispatch(
-        createGoal({ name: goalName.trim(), target, icon: goalIcon || null }),
-      );
-      if (createGoal.rejected.match(result)) {
-        showAlert({
-          title: "Creation failed",
-          message: String(result.payload || "Could not create goal"),
-        });
-        return;
-      }
-    }
-
-    handleGoalModalClose();
-  }, [
-    dispatch,
-    editingGoal,
-    goalIcon,
-    goalName,
-    goalTarget,
-    handleGoalModalClose,
-    showAlert,
-  ]);
 
   const openAllocate = useCallback((goal: IGoal) => {
     setSelectedGoalId(goal.id);
@@ -278,55 +232,6 @@ export default function GoalsScreen() {
     showAlert,
   ]);
 
-  const confirmDelete = useCallback(
-    (goal: IGoal) => {
-      showAlert({
-        title: "Delete goal",
-        message: `Delete "${goal.name}"?`,
-        buttons: [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Delete",
-            style: "destructive",
-            onPress: async () => {
-              const result = await dispatch(deleteGoal(goal.id));
-              if (deleteGoal.rejected.match(result)) {
-                showAlert({
-                  title: "Delete failed",
-                  message: String(result.payload || "Could not delete goal"),
-                });
-                return;
-              }
-
-              const removedCurrentMonthAmount =
-                await removeGoalAllocationsForGoalFromCache(
-                  goal.id,
-                  calendar.year,
-                  calendar.month,
-                );
-
-              if (removedCurrentMonthAmount > 0) {
-                dispatch(removeGoalAllocationSpent(removedCurrentMonthAmount));
-              }
-
-              await dispatch(
-                fetchTransaction({
-                  searchQuery: "",
-                  currentMonth: calendar.month,
-                  currentYear: calendar.year,
-                  page: 1,
-                  limit: PAGINATION_LIMIT,
-                  useCache: false,
-                }),
-              );
-            },
-          },
-        ],
-      });
-    },
-    [calendar.month, calendar.year, dispatch, showAlert],
-  );
-
   const filteredGoals = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return goals;
@@ -334,18 +239,6 @@ export default function GoalsScreen() {
   }, [goals, searchQuery]);
 
   const hasGoals = goals && goals.length > 0;
-
-  // if (isInitialLoading) {
-  //   return (
-  //     <SafeAreaView
-  //       edges={["left", "right"]}
-  //       className="flex-1"
-  //       style={{ backgroundColor: THEME.background }}
-  //     >
-  //       <BudgetSkeleton />
-  //     </SafeAreaView>
-  //   );
-  // }
 
   return (
     <SafeAreaView
@@ -399,7 +292,6 @@ export default function GoalsScreen() {
                 goal={goal}
                 currency={user?.currency || "USD"}
                 onEdit={openEditGoal}
-                onDelete={confirmDelete}
                 onAllocate={openAllocate}
                 onDeallocate={openDeallocate}
                 surface={THEME.surface}
@@ -440,14 +332,8 @@ export default function GoalsScreen() {
         openSheet={openGoalModal}
         setOpenSheet={handleSetGoalModalOpen}
         editingGoal={editingGoal}
-        goalName={goalName}
-        setGoalName={setGoalName}
-        goalTarget={goalTarget}
-        setGoalTarget={setGoalTarget}
-        goalIcon={goalIcon}
-        setGoalIcon={setGoalIcon}
-        onSubmit={submitGoal}
         saving={isLoading}
+        handleGoalModalClose={handleGoalModalClose}
       />
 
       <GoalAllocateModal

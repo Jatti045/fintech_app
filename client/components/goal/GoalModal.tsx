@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useCallback, useEffect, useRef} from "react";
 import {
   Modal,
   ScrollView,
@@ -15,44 +15,70 @@ import ModalCloseButton from "@/components/global/modalCloseButton";
 import IconSelectorModal from "@/components/budget/IconSelectorModal";
 import type { IGoal } from "@/types/goal/types";
 import Loader from "@/utils/loader";
+import useGoalOperation from "@/hooks/goal/useGoalOperation";
 
 interface GoalModalProps {
   openSheet: boolean;
   setOpenSheet: (open: boolean) => void;
   editingGoal: IGoal | null;
-  goalName: string;
-  setGoalName: (val: string) => void;
-  goalTarget: string;
-  setGoalTarget: (val: string) => void;
-  goalIcon: string;
-  setGoalIcon: (val: string) => void;
-  onSubmit: () => void;
   saving: boolean;
+  handleGoalModalClose: () => void;
 }
 
 function GoalModal({
   openSheet,
   setOpenSheet,
   editingGoal,
-  goalName,
-  setGoalName,
-  goalTarget,
-  setGoalTarget,
-  goalIcon,
-  setGoalIcon,
-  onSubmit,
+    handleGoalModalClose,
   saving,
 }: GoalModalProps) {
   const { THEME } = useTheme();
   const [openIconSelector, setOpenIconSelector] = React.useState(false);
   const modalHeight = getModalHeight();
 
+  const {
+      goalName,
+      setGoalName,
+      goalTarget,
+      setGoalTarget,
+      goalIcon,
+      setGoalIcon,
+      handleCreateGoal,
+      handleUpdateGoal,
+      handleDeleteGoal,
+  } = useGoalOperation();
+
+    const prevOpenRef = useRef(openSheet);
+    useEffect(() => {
+        if (!openSheet && prevOpenRef.current) {
+            // Modal closed — reset form fields
+            try {
+                setGoalName("");
+                setGoalIcon("");
+                setGoalTarget("");
+            } catch (e) {
+                // ignore
+            }
+            //if (onClose) onClose();
+        }
+        prevOpenRef.current = openSheet;
+    }, [openSheet]);
+
+    useEffect(() => {
+        if (editingGoal) {
+            setGoalName(String(editingGoal.name ?? ""));
+            setGoalTarget(String(editingGoal.target ?? ""));
+            setGoalIcon(String(editingGoal.icon ?? ""));
+        }
+    }, [editingGoal]);
+
+  const onSubmit = editingGoal ? () => handleUpdateGoal(editingGoal, handleGoalModalClose) : () => handleCreateGoal(handleGoalModalClose);
+
   return (
     <Modal
       visible={openSheet}
       animationType="slide"
-      presentationStyle="pageSheet"
-      transparent
+      transparent={true}
     >
       <View
         style={{
