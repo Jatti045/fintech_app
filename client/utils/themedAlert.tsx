@@ -86,8 +86,8 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
       {children}
       <Modal
         visible={visible}
-        transparent
         animationType="fade"
+        transparent={true}
         onRequestClose={hideAlert}
       >
         <View style={styles.overlay}>
