@@ -1,9 +1,7 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import { View, Text } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { formatNumber } from "@/utils/helper";
 import { useTheme, useUser } from "@/hooks/useRedux";
-import {BlurView} from "expo-blur";
+import AnimatedNumber from "react-native-animated-numbers";
 
 type Props = {
   monthlyIncome: number;
@@ -11,13 +9,6 @@ type Props = {
   monthLabel: string;
 };
 
-/**
- * Beautiful modern dashboard overview component featuring:
- * - Monthly income display with gradient background
- * - Amount spent with visual feedback
- * - Remaining budget calculation
- * - Budget health indicator
- */
 export default function DashboardOverview({
   monthlyIncome,
   totalSpent,
@@ -27,8 +18,20 @@ export default function DashboardOverview({
   const user = useUser();
   const currency = user?.currency || "USD";
 
-  // Calculate remaining budget
   const remaining = monthlyIncome - totalSpent;
+
+
+  const [animatedIncome, setAnimatedIncome] = useState(0);
+  const [animatedSpend, setAnimatedSpend] = useState(0);
+  const [animatedRemaining, setAnimatedRemaining] = useState(0);
+    useEffect(() => {
+        setAnimatedIncome(monthlyIncome);
+        setAnimatedSpend(totalSpent);
+        setAnimatedRemaining(remaining);
+    }, [monthlyIncome, totalSpent, remaining]);
+
+
+  // Calculate remaining budget
 
   return (
 
@@ -61,16 +64,10 @@ export default function DashboardOverview({
               Monthly Income
             </Text>
             <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-              <Text
-                style={{
-                  color: THEME.textPrimary,
-                  fontSize: 42,
-                  fontWeight: "900",
-                  letterSpacing: -1,
-                }}
-              >
-                {formatNumber(monthlyIncome)}
-              </Text>
+                <AnimatedNumber includeComma animationDuration={800} animateToNumber={animatedIncome} fontStyle={{                    color: THEME.textPrimary,
+                    fontSize: 42,
+                    fontWeight: "900",
+                    letterSpacing: -1,}} />
               <Text
                 style={{
                   color: THEME.textPrimary,
@@ -103,15 +100,12 @@ export default function DashboardOverview({
                             Spent This Month
                         </Text>
                         <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-                            <Text
-                                style={{
-                                    color: THEME.textPrimary,
+
+                                <AnimatedNumber includeComma animationDuration={800} animateToNumber={animatedSpend} fontStyle={{                    color: THEME.textPrimary,
                                     fontSize: 24,
                                     fontWeight: "700",
-                                }}
-                            >
-                                {formatNumber(totalSpent)}
-                            </Text>
+                                    letterSpacing: -1,}} />
+
                             <Text
                                 style={{
                                     color: THEME.textPrimary,
@@ -136,15 +130,10 @@ export default function DashboardOverview({
                             Remaining
                         </Text>
                         <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-                            <Text
-                                style={{
-                                    color: THEME.textPrimary,
-                                    fontSize: 24,
-                                    fontWeight: "700",
-                                }}
-                            >
-                                {formatNumber(Math.max(0, remaining))}
-                            </Text>
+                            <AnimatedNumber includeComma animationDuration={800} animateToNumber={animatedRemaining} fontStyle={{                    color: THEME.textPrimary,
+                                fontSize: 24,
+                                fontWeight: "700",
+                                letterSpacing: -1,}} />
                             <Text
                                 style={{
                                     color: "rgba(255, 255, 255, 0.7)",
