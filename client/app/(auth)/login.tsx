@@ -265,7 +265,7 @@ const LoginScreen = () => {
                       className="text-sm font-medium"
                     >
                       Forgot Password?
-                    </Text>{" "}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
