@@ -98,9 +98,8 @@ function OTPModal({
   return (
     <Modal
       transparent={true}
-      visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
+      visible={visible}
     >
       <View
         style={{
