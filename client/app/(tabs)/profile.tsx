@@ -8,19 +8,15 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { useProfile } from "@/hooks/profile/useProfile";
 import { DEFAULT_CURRENCY } from "@/constants/Currencies";
 import Loader from "@/utils/loader";
-
-import {
-  ProfileHeader,
-  ThemeSwitcher,
-  CurrencySelector,
-  SettingsList,
-  ChangePasswordModal,
-  CurrencyPickerModal,
-} from "@/components/profile";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import ThemeSwitcher from "@/components/profile/ThemeSwitcher";
+import CurrencySelector from "@/components/profile/CurrencySelector";
+import SettingsList from "@/components/profile/SettingsList";
+import ChangePasswordModal from "@/components/profile/ChangePasswordModal";
+import CurrencyPickerModal from "@/components/profile/CurrencyPickerModal";
 
 export default function ProfileScreen() {
   const {
