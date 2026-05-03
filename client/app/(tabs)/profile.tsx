@@ -20,7 +20,6 @@ import {
   SettingsList,
   ChangePasswordModal,
   CurrencyPickerModal,
-  BankConnections,
 } from "@/components/profile";
 
 export default function ProfileScreen() {
@@ -76,8 +75,6 @@ export default function ProfileScreen() {
           onPickImage={handlePickImage}
           onDeleteImage={handleDeleteImage}
         />
-
-        {/*<BankConnections THEME={THEME} />*/}
 
         {/* Settings */}
         <View className="mb-8">
