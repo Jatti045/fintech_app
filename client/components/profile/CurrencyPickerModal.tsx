@@ -36,6 +36,8 @@ export default function CurrencyPickerModal({
             borderTopRightRadius: MODAL_BORDER_RADIUS,
             height: modalHeight,
             paddingBottom: 30,
+              borderWidth: 1,
+              borderTopColor: THEME.border,
           }}
         >
           {/* Header */}

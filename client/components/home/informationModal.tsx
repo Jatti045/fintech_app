@@ -51,6 +51,8 @@ function InformationModal({
             borderTopLeftRadius: MODAL_BORDER_RADIUS,
             borderTopRightRadius: MODAL_BORDER_RADIUS,
             overflow: "hidden",
+              borderWidth: 1,
+              borderTopColor: THEME.border,
           }}
         >
           <View className="relative mb-4">

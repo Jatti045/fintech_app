@@ -75,6 +75,8 @@ const IconSelectorModal = ({
             borderTopLeftRadius: MODAL_BORDER_RADIUS,
             borderTopRightRadius: MODAL_BORDER_RADIUS,
             overflow: "hidden",
+            borderWidth: 1,
+            borderTopColor: THEME.border,
           }}
         >
           <View className="mb-3 flex-row items-center justify-between">

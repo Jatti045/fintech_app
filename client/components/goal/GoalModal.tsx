@@ -45,23 +45,18 @@ function GoalModal({
       setGoalIcon,
       handleCreateGoal,
       handleUpdateGoal,
-      handleDeleteGoal,
   } = useGoalOperation();
 
-    const prevOpenRef = useRef(openSheet);
+  const clearInputs = () => {
+      setGoalName("");
+      setGoalIcon("");
+      setGoalTarget("");
+  }
+
     useEffect(() => {
-        if (!openSheet && prevOpenRef.current) {
-            // Modal closed — reset form fields
-            try {
-                setGoalName("");
-                setGoalIcon("");
-                setGoalTarget("");
-            } catch (e) {
-                // ignore
-            }
-            //if (onClose) onClose();
+        if (!openSheet) {
+            clearInputs();
         }
-        prevOpenRef.current = openSheet;
     }, [openSheet]);
 
     useEffect(() => {
@@ -96,6 +91,8 @@ function GoalModal({
             borderTopLeftRadius: MODAL_BORDER_RADIUS,
             borderTopRightRadius: MODAL_BORDER_RADIUS,
             overflow: "hidden",
+              borderWidth: 1,
+              borderTopColor: THEME.border,
           }}
         >
           <View className="relative mb-4">

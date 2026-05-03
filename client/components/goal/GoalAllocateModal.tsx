@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import {
   Modal,
   ScrollView,
@@ -12,27 +12,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/hooks/useRedux";
 import ModalCloseButton from "@/components/global/modalCloseButton";
+import useGoalOperation from "@/hooks/goal/useGoalOperation";
+
 
 interface GoalAllocateModalProps {
   openSheet: boolean;
   setOpenSheet: (open: boolean) => void;
-  allocateAmount: string;
-  setAllocateAmount: (val: string) => void;
+  goalToAllocate: string | null;
+  handleAllocateModalClose: () => void;
   mode: "allocate" | "deallocate";
-  onSubmit: () => void;
   saving: boolean;
 }
 
 function GoalAllocateModal({
   openSheet,
   setOpenSheet,
-  allocateAmount,
-  setAllocateAmount,
+    goalToAllocate,
+    handleAllocateModalClose,
   mode,
-  onSubmit,
   saving,
 }: GoalAllocateModalProps) {
   const { THEME } = useTheme();
+  const {handleSubmitAllocation} = useGoalOperation()
+    const [allocateAmount, setAllocateAmount] = useState("");
   const isAllocate = mode === "allocate";
   const title = isAllocate ? "Allocate to Goal" : "Withdraw from Goal";
   const buttonText = isAllocate
@@ -43,6 +45,8 @@ function GoalAllocateModal({
       ? "Withdrawing..."
       : "Withdraw";
   const modalHeight = getModalHeight();
+
+  const onSubmit = () => handleSubmitAllocation(allocateAmount, goalToAllocate, mode, handleAllocateModalClose);
 
   return (
     <Modal
@@ -66,6 +70,8 @@ function GoalAllocateModal({
             borderTopLeftRadius: MODAL_BORDER_RADIUS,
             borderTopRightRadius: MODAL_BORDER_RADIUS,
             overflow: "hidden",
+              borderWidth: 1,
+              borderTopColor: THEME.border,
           }}
         >
           <View className="relative mb-4">
