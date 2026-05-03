@@ -7,6 +7,7 @@ import { formatCurrency } from "@/utils/helper";
 import { hapticHeavy, hapticLight } from "@/utils/haptics";
 import SwipeableRow from "@/components/global/SwipeableRow";
 import useGoalOperation from "@/hooks/goal/useGoalOperation";
+import {useTheme} from "@/hooks/useRedux";
 
 export interface GoalBudgetCardProps {
   goal: IGoal;
@@ -14,14 +15,6 @@ export interface GoalBudgetCardProps {
   onEdit: (goal: IGoal) => void;
   onAllocate: (goal: IGoal) => void;
   onDeallocate: (goal: IGoal) => void;
-  surface: string;
-  border: string;
-  background: string;
-  primary: string;
-  secondary: string;
-  textPrimary: string;
-  textSecondary: string;
-  danger: string;
 }
 
 const GoalBudgetCard = React.memo(function GoalBudgetCard({
@@ -30,19 +23,11 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
   onEdit,
   onAllocate,
   onDeallocate,
-  surface,
-  border,
-  background,
-  primary,
-  secondary,
-  textPrimary,
-  textSecondary,
-  danger,
 }: GoalBudgetCardProps) {
+  const {THEME} = useTheme();
   const target = Number(goal.target || 0);
   const progress = Number(goal.progress || 0);
   const remaining = Number(goal.remaining || 0);
-
   const ratio = target > 0 ? Math.max(0, Math.min(1, progress / target)) : 0;
   const percent = Math.round(ratio * 100);
   const achieved = goal.achieved || remaining <= 0;
@@ -54,7 +39,7 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
   return (
     <SwipeableRow
       onDelete={() => handleDeleteGoal(goal)}
-      dangerColor={danger}
+      dangerColor={THEME.danger}
       actionStyle={{ marginBottom: 16, borderRadius: 16 }}
     >
       <TouchableOpacity
@@ -70,8 +55,8 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
       >
         <View
           style={{
-            backgroundColor: surface,
-            borderColor: border,
+            backgroundColor: THEME.surface,
+            borderColor: THEME.border,
             borderWidth: 1,
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.06,
@@ -82,22 +67,22 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
         >
           <View className="flex-row justify-between items-start">
             <View style={{ flex: 1 }}>
-              <Text style={{ color: textSecondary }} className="text-sm">
+              <Text style={{ color: THEME.textSecondary }} className="text-sm">
                 Goal target
               </Text>
               <Text
-                style={{ color: textPrimary }}
+                style={{ color: THEME.textPrimary }}
                 className="text-2xl font-extrabold mt-1"
               >
                 {formatCurrency(target, currency)}
               </Text>
 
-              <Text style={{ color: textSecondary }} className="mt-2 text-sm">
+              <Text style={{ color: THEME.textSecondary }} className="mt-2 text-sm">
                 {goal.name}
               </Text>
 
               <View className="flex-row items-center mt-2">
-                <Text style={{ color: textSecondary }} className="text-sm">
+                <Text style={{ color: THEME.textSecondary }} className="text-sm">
                   Saved {formatCurrency(progress, currency)}
                 </Text>
                 {achieved && (
@@ -117,12 +102,12 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
             </View>
 
             <View className="items-center ml-4">
-              <Feather name={safeIconName} size={52} color={secondary} />
+              <Feather name={safeIconName} size={52} color={THEME.secondary} />
               <View
                 className="mt-2 px-2 py-1 rounded-md"
-                style={{ backgroundColor: background }}
+                style={{ backgroundColor: THEME.background }}
               >
-                <Text style={{ color: textSecondary }} className="font-bold">
+                <Text style={{ color: THEME.textSecondary }} className="font-bold">
                   {percent}%
                 </Text>
               </View>
@@ -131,12 +116,12 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
 
           <View
             className="mt-4 rounded-full overflow-hidden"
-            style={{ backgroundColor: border, height: 12 }}
+            style={{ backgroundColor: THEME.border, height: 12 }}
           >
             <View style={{ flexDirection: "row", width: "100%", height: 12 }}>
               <LinearGradient
                 colors={
-                  achieved ? ["#22C55E", "#16A34A"] : [primary, secondary]
+                  achieved ? ["#22C55E", "#16A34A"] : [THEME.primary, THEME.secondary]
                 }
                 start={[0, 0]}
                 end={[1, 0]}
@@ -147,7 +132,7 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
           </View>
 
           <View className="mt-3 flex-row items-center justify-between">
-            <Text style={{ color: textSecondary }} className="text-sm">
+            <Text style={{ color: THEME.textSecondary }} className="text-sm">
               Remaining {formatCurrency(Math.max(remaining, 0), currency)}
             </Text>
 
@@ -158,14 +143,14 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
                 onPress={() => onDeallocate(goal)}
                 activeOpacity={0.9}
                 style={{
-                  borderColor: primary,
+                  borderColor: THEME.primary,
                   borderWidth: 1,
                   paddingVertical: 8,
                   paddingHorizontal: 12,
                   borderRadius: 10,
                 }}
               >
-                <Text style={{ color: primary, fontWeight: "700" }}>
+                <Text style={{ color: THEME.primary, fontWeight: "700" }}>
                   Withdraw
                 </Text>
               </TouchableOpacity>
@@ -174,13 +159,13 @@ const GoalBudgetCard = React.memo(function GoalBudgetCard({
                 onPress={() => onAllocate(goal)}
                 activeOpacity={0.9}
                 style={{
-                  backgroundColor: primary,
+                  backgroundColor: THEME.primary,
                   paddingVertical: 8,
                   paddingHorizontal: 14,
                   borderRadius: 10,
                 }}
               >
-                <Text style={{ color: textPrimary, fontWeight: "700" }}>
+                <Text style={{ color: THEME.textPrimary, fontWeight: "700" }}>
                   Allocate
                 </Text>
               </TouchableOpacity>

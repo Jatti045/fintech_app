@@ -2,25 +2,21 @@ import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import {useTheme} from "@/hooks/useRedux";
 
 export interface NewGoalButtonProps {
   onPress: () => void;
-  primary: string;
-  secondary: string;
-  textPrimary: string;
 }
 
 const NewGoalButton = React.memo(function NewGoalButton({
   onPress,
-  primary,
-  secondary,
-  textPrimary,
 }: NewGoalButtonProps) {
+    const {THEME} = useTheme();
   return (
     <View className="absolute bottom-0 right-0 p-4">
       <TouchableOpacity onPress={onPress}>
         <LinearGradient
-          colors={[primary, secondary]}
+          colors={[THEME.primary, THEME.secondary]}
           start={[0, 0]}
           end={[1, 1]}
           style={{
@@ -29,7 +25,7 @@ const NewGoalButton = React.memo(function NewGoalButton({
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 1000,
-            shadowColor: primary,
+            shadowColor: THEME.primary,
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.7,
             shadowRadius: 16,
@@ -37,9 +33,9 @@ const NewGoalButton = React.memo(function NewGoalButton({
           }}
         >
           <View className="items-center justify-center flex-row gap-1">
-            <Feather name="plus" size={24} color={textPrimary} />
+            <Feather name="plus" size={24} color={THEME.textPrimary} />
             <Text
-              style={{ color: textPrimary }}
+              style={{ color: THEME.textPrimary }}
               className="font-bold text-base"
             >
               New Goal
