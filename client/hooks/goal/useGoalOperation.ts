@@ -1,13 +1,18 @@
 import {useCallback} from "react";
 import {useGoalForm} from "@/hooks/goal/useGoalForm";
-import {createGoal, deleteGoal, updateGoal} from "@/store/slices/goalSlice";
+import {allocateToGoal, createGoal, deallocateFromGoal, deleteGoal, updateGoal} from "@/store/slices/goalSlice";
 import {useThemedAlert} from "@/utils/themedAlert";
 import {useAppDispatch, useCalendar} from "@/hooks/useRedux";
 import {IGoal} from "@/types/goal/types";
 import {hapticSuccess} from "@/utils/haptics";
-import {removeGoalAllocationsForGoalFromCache} from "@/utils/cache";
-import {fetchTransaction, removeGoalAllocationSpent} from "@/store/slices/transactionSlice";
+import {
+    addGoalAllocationToCache,
+    removeGoalAllocationAmountFromCache,
+    removeGoalAllocationsForGoalFromCache
+} from "@/utils/cache";
+import {addGoalAllocationSpent, fetchTransaction, removeGoalAllocationSpent} from "@/store/slices/transactionSlice";
 import {PAGINATION_LIMIT} from "@/constants/appConfig";
+
 
 
 export const useGoalOperation = () => {
@@ -143,11 +148,87 @@ export const useGoalOperation = () => {
         }, [calendar.month, calendar.year, dispatch, showAlert]
     )
 
+    const handleSubmitAllocation = async (allocateAmount: string, selectedGoalId: string | null, allocationMode: string, handleAllocateModalClose: () => void) => {
+        const amount = Number(allocateAmount);
+        if (!selectedGoalId) return;
+
+        if (!amount || amount <= 0) {
+            showAlert({ title: "Allocation must be a positive number" });
+            return;
+        }
+
+        const action =
+            allocationMode === "allocate"
+                ? allocateToGoal({ goalId: selectedGoalId, amount })
+                : deallocateFromGoal({ goalId: selectedGoalId, amount });
+
+        const result = await dispatch(action);
+        if (
+            allocateToGoal.rejected.match(result) ||
+            deallocateFromGoal.rejected.match(result)
+        ) {
+            showAlert({
+                title:
+                    allocationMode === "allocate"
+                        ? "Allocation failed"
+                        : "Withdraw failed",
+                message: String(
+                    result.payload ||
+                    (allocationMode === "allocate"
+                        ? "Could not allocate to goal"
+                        : "Could not withdraw from goal"),
+                ),
+            });
+            return;
+        } else {
+            hapticSuccess();
+        }
+
+        if (allocationMode === "allocate") {
+            // Immediate local UI update.
+            dispatch(addGoalAllocationSpent(amount));
+
+            // Persist allocation amount for refresh fallback.
+            await addGoalAllocationToCache(
+                calendar.year,
+                calendar.month,
+                selectedGoalId,
+                amount,
+            );
+        } else {
+            // Immediate local UI update for current month card.
+            dispatch(removeGoalAllocationSpent(amount));
+
+            // Best-effort cache correction used by month summary fallback.
+            await removeGoalAllocationAmountFromCache(
+                calendar.year,
+                calendar.month,
+                selectedGoalId,
+                amount,
+            );
+        }
+
+        // Refresh monthly transaction summary from server (includes goal allocations).
+        await dispatch(
+            fetchTransaction({
+                searchQuery: "",
+                currentMonth: calendar.month,
+                currentYear: calendar.year,
+                page: 1,
+                limit: PAGINATION_LIMIT,
+                useCache: false,
+            }),
+        );
+
+        handleAllocateModalClose();
+    };
+
     return {
         ...form,
         handleCreateGoal,
         handleUpdateGoal,
         handleDeleteGoal,
+        handleSubmitAllocation,
     };
 };
 

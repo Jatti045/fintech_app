@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { useAppDispatch } from "@/store";
 import {
   useAuth,
@@ -11,20 +10,8 @@ import {
   useTheme,
 } from "@/hooks/useRedux";
 import {
-  allocateToGoal,
-  deallocateFromGoal,
   fetchGoals,
 } from "@/store/slices/goalSlice";
-import {
-  addGoalAllocationSpent,
-  fetchTransaction,
-  removeGoalAllocationSpent,
-} from "@/store/slices/transactionSlice";
-import { PAGINATION_LIMIT } from "@/constants/appConfig";
-import {
-  addGoalAllocationToCache,
-  removeGoalAllocationAmountFromCache,
-} from "@/utils/cache";
 import type { IGoal } from "@/types/goal/types";
 import { useThemedAlert } from "@/utils/themedAlert";
 import {
@@ -41,28 +28,26 @@ export default function GoalsScreen() {
   const dispatch = useAppDispatch();
   const { THEME } = useTheme();
   const { user } = useAuth();
-  const { showAlert } = useThemedAlert();
   const goals = useGoals();
   const { isLoading } = useGoalStatus();
-
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const isSearching = searchQuery.trim().length > 0;
   const [openGoalModal, setOpenGoalModal] = useState(false);
   const [openAllocateModal, setOpenAllocateModal] = useState(false);
+  const [allocationMode, setAllocationMode] = useState<
+      "allocate" | "deallocate"
+  >("allocate");
   const [editingGoal, setEditingGoal] = useState<IGoal | null>(null);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
-  const [allocationMode, setAllocationMode] = useState<
-    "allocate" | "deallocate"
-  >("allocate");
+  const calendar = useCalendar();
+  const isSearching = searchQuery.trim().length > 0;
 
-const {  goalName,
+  const {  goalName,
   setGoalName,
   setGoalTarget,
-  setGoalIcon} = useGoalOperation();
+  setGoalIcon,
+} = useGoalOperation();
 
-  const [allocateAmount, setAllocateAmount] = useState("");
-  const calendar = useCalendar();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -73,155 +58,66 @@ const {  goalName,
     }
   }, [dispatch]);
 
-  const resetGoalForm = useCallback(() => {
+  const resetGoalForm =() => {
     setGoalName("");
     setGoalTarget("");
     setGoalIcon("");
-  }, []);
+  };
 
-  const openCreateGoal = useCallback(() => {
+  const openCreateGoal = () => {
     setEditingGoal(null);
     resetGoalForm();
     setOpenGoalModal(true);
-  }, [resetGoalForm]);
+  };
 
-  const openEditGoal = useCallback((goal: IGoal) => {
+  const openEditGoal =(goal: IGoal) => {
     setEditingGoal(goal);
     setGoalName(goal.name || "");
     setGoalTarget(String(goal.target || ""));
     setGoalIcon(goal.icon || "");
     setOpenGoalModal(true);
-  }, []);
+  };
 
-  const handleGoalModalClose = useCallback(() => {
+  const handleGoalModalClose =() => {
     setOpenGoalModal(false);
     setEditingGoal(null);
     resetGoalForm();
-  }, [resetGoalForm]);
+  };
 
-  const handleSetGoalModalOpen = useCallback(
+  const handleSetGoalModalOpen =
     (open: boolean) => {
       if (!open) {
         handleGoalModalClose();
         return;
       }
       setOpenGoalModal(true);
-    },
-    [handleGoalModalClose],
-  );
+    };
 
-  const openAllocate = useCallback((goal: IGoal) => {
+  const openAllocate =(goal: IGoal) => {
     setSelectedGoalId(goal.id);
-    setAllocateAmount("");
+    setOpenAllocateModal(true);
     setAllocationMode("allocate");
-    setOpenAllocateModal(true);
-  }, []);
+  };
 
-  const openDeallocate = useCallback((goal: IGoal) => {
+  const openDeallocate =(goal: IGoal) => {
     setSelectedGoalId(goal.id);
-    setAllocateAmount("");
-    setAllocationMode("deallocate");
     setOpenAllocateModal(true);
-  }, []);
+    setAllocationMode("deallocate");
+  };
 
-  const handleAllocateModalClose = useCallback(() => {
+  const handleAllocateModalClose =() => {
     setOpenAllocateModal(false);
     setSelectedGoalId(null);
-    setAllocateAmount("");
-  }, []);
+  };
 
-  const handleSetAllocateModalOpen = useCallback(
+  const handleSetAllocateModalOpen =
     (open: boolean) => {
       if (!open) {
         handleAllocateModalClose();
         return;
       }
       setOpenAllocateModal(true);
-    },
-    [handleAllocateModalClose],
-  );
-
-  const submitAllocation = useCallback(async () => {
-    const amount = Number(allocateAmount);
-    if (!selectedGoalId) return;
-
-    if (!amount || amount <= 0) {
-      showAlert({ title: "Allocation must be a positive number" });
-      return;
-    }
-
-    const action =
-      allocationMode === "allocate"
-        ? allocateToGoal({ goalId: selectedGoalId, amount })
-        : deallocateFromGoal({ goalId: selectedGoalId, amount });
-
-    const result = await dispatch(action);
-    if (
-      allocateToGoal.rejected.match(result) ||
-      deallocateFromGoal.rejected.match(result)
-    ) {
-      showAlert({
-        title:
-          allocationMode === "allocate"
-            ? "Allocation failed"
-            : "Withdraw failed",
-        message: String(
-          result.payload ||
-            (allocationMode === "allocate"
-              ? "Could not allocate to goal"
-              : "Could not withdraw from goal"),
-        ),
-      });
-      return;
-    }
-
-    if (allocationMode === "allocate") {
-      // Immediate local UI update.
-      dispatch(addGoalAllocationSpent(amount));
-
-      // Persist allocation amount for refresh fallback.
-      await addGoalAllocationToCache(
-        calendar.year,
-        calendar.month,
-        selectedGoalId,
-        amount,
-      );
-    } else {
-      // Immediate local UI update for current month card.
-      dispatch(removeGoalAllocationSpent(amount));
-
-      // Best-effort cache correction used by month summary fallback.
-      await removeGoalAllocationAmountFromCache(
-        calendar.year,
-        calendar.month,
-        selectedGoalId,
-        amount,
-      );
-    }
-
-    // Refresh monthly transaction summary from server (includes goal allocations).
-    await dispatch(
-      fetchTransaction({
-        searchQuery: "",
-        currentMonth: calendar.month,
-        currentYear: calendar.year,
-        page: 1,
-        limit: PAGINATION_LIMIT,
-        useCache: false,
-      }),
-    );
-
-    handleAllocateModalClose();
-  }, [
-    allocateAmount,
-    allocationMode,
-    calendar.month,
-    calendar.year,
-    dispatch,
-    handleAllocateModalClose,
-    selectedGoalId,
-    showAlert,
-  ]);
+    };
 
   const filteredGoals = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -256,14 +152,8 @@ const {  goalName,
         )}
       </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
+      <ScrollView className="flex-1 pb-30 px-4 pt-3"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: 120,
-          paddingHorizontal: 16,
-          paddingTop: 12,
-        }}
         refreshControl={
           <RefreshControl
             refreshing={isSearching ? false : refreshing}
@@ -273,26 +163,17 @@ const {  goalName,
           />
         }
       >
-        {/* Goal overview header */}
-        {/*<GoalOverviewHeader />*/}
+        {/* Display goal cards */}
         {hasGoals ? (
           filteredGoals.length > 0 ? (
             filteredGoals.map((goal) => (
               <GoalBudgetCard
-                key={goal.id}
+                  key={goal.id}
                 goal={goal}
                 currency={user?.currency || "USD"}
                 onEdit={openEditGoal}
                 onAllocate={openAllocate}
                 onDeallocate={openDeallocate}
-                surface={THEME.surface}
-                border={THEME.border}
-                background={THEME.background}
-                primary={THEME.primary}
-                secondary={THEME.secondary}
-                textPrimary={THEME.textPrimary}
-                textSecondary={THEME.textSecondary}
-                danger={THEME.danger}
               />
             ))
           ) : (
@@ -303,20 +184,12 @@ const {  goalName,
             </View>
           )
         ) : (
-          <EmptyGoalState
-            primary={THEME.primary}
-            secondary={THEME.secondary}
-            textPrimary={THEME.textPrimary}
-            textSecondary={THEME.textSecondary}
-          />
+          <EmptyGoalState />
         )}
       </ScrollView>
 
       <NewGoalButton
         onPress={openCreateGoal}
-        primary={THEME.primary}
-        secondary={THEME.secondary}
-        textPrimary={THEME.textPrimary}
       />
 
       <GoalModal
@@ -330,10 +203,9 @@ const {  goalName,
       <GoalAllocateModal
         openSheet={openAllocateModal}
         setOpenSheet={handleSetAllocateModalOpen}
-        allocateAmount={allocateAmount}
-        setAllocateAmount={setAllocateAmount}
+        goalToAllocate={selectedGoalId}
         mode={allocationMode}
-        onSubmit={submitAllocation}
+        handleAllocateModalClose={handleAllocateModalClose}
         saving={isLoading}
       />
     </SafeAreaView>
