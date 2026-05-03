@@ -34,7 +34,6 @@ export default function SearchBar({
           borderWidth: 2,
           borderColor: isFocused ? THEME.primary : THEME.border,
           paddingHorizontal: 12,
-          transition: "border-color 0.2s ease-in-out",
         }}
       >
         <Feather

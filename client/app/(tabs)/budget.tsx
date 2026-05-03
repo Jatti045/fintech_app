@@ -17,11 +17,9 @@ import {
   BudgetModal,
   EmptyBudgetState,
   NewBudgetButton,
-  BudgetOverviewHeader,
 } from "@/components/budget";
 import { useBudgetOperations } from "@/hooks/budget/useBudgetOperation";
 import type { IBudget } from "@/types/budget/types";
-import { BudgetSkeleton } from "@/components/skeleton/SkeletonLoader";
 import SearchBar from "@/components/global/SearchBar";
 import { useBudgetDisplayAmounts } from "@/hooks/budget/useBudgetDisplayAmounts";
 

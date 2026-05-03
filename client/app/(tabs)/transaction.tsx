@@ -20,7 +20,6 @@ import { useTransactionFilters } from "@/hooks/transaction/useTransactionFilters
 import { useTransactionLoadMore } from "@/hooks/transaction/useTransactionLoadMore";
 import { useTransactionSearch } from "@/hooks/transaction/useTransactionSearch";
 import { useTransactionDisplayAmounts } from "@/hooks/transaction/useTransactionDisplayAmounts";
-import { TransactionSkeleton } from "@/components/skeleton/SkeletonLoader";
 import type { TransactionItem } from "@/types/transaction/types";
 import {
   useAuth,
