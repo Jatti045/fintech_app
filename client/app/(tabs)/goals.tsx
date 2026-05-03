@@ -12,11 +12,8 @@ import {
 } from "@/hooks/useRedux";
 import {
   allocateToGoal,
-  createGoal,
   deallocateFromGoal,
-  deleteGoal,
   fetchGoals,
-  updateGoal,
 } from "@/store/slices/goalSlice";
 import {
   addGoalAllocationSpent,
@@ -27,7 +24,6 @@ import { PAGINATION_LIMIT } from "@/constants/appConfig";
 import {
   addGoalAllocationToCache,
   removeGoalAllocationAmountFromCache,
-  removeGoalAllocationsForGoalFromCache,
 } from "@/utils/cache";
 import type { IGoal } from "@/types/goal/types";
 import { useThemedAlert } from "@/utils/themedAlert";
@@ -37,9 +33,7 @@ import {
   GoalBudgetCard,
   GoalModal,
   NewGoalButton,
-  GoalOverviewHeader,
 } from "@/components/goal";
-import { BudgetSkeleton } from "@/components/skeleton/SkeletonLoader";
 import SearchBar from "@/components/global/SearchBar";
 import useGoalOperation from "@/hooks/goal/useGoalOperation";
 
@@ -64,14 +58,11 @@ export default function GoalsScreen() {
 
 const {  goalName,
   setGoalName,
-  goalTarget,
   setGoalTarget,
-  goalIcon,
   setGoalIcon} = useGoalOperation();
 
   const [allocateAmount, setAllocateAmount] = useState("");
   const calendar = useCalendar();
-  const isInitialLoading = isLoading && goals.length === 0 && !isSearching;
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
