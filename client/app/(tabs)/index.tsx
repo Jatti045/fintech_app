@@ -5,19 +5,16 @@ import { useAppDispatch } from "@/store";
 import { nextMonth, prevMonth } from "@/store/slices/calendarSlice";
 import { fetchTransaction } from "@/store/slices/transactionSlice";
 import { fetchBudgets } from "@/store/slices/budgetSlice";
-import { HomeSkeleton } from "@/components/skeleton/SkeletonLoader";
 import { useThemedAlert } from "@/utils/themedAlert";
 import TransactionModal from "@/components/transaction/TxModal";
 import BudgetModal from "@/components/budget/BudgetModal";
 import InformationModal from "@/components/home/informationModal";
-import { TopCategoriesChart } from "@/components/home/TopCategoriesChart";
 import HomeHeader from "@/components/home/HomeHeader";
 import MonthSelector from "@/components/home/MonthSelector";
 import DashboardOverview from "@/components/home/DashboardOverview";
 import QuickActions from "@/components/home/QuickActions";
 import BudgetSummary from "@/components/home/BudgetSummary";
 import GoalSummary from "@/components/home/GoalSummary";
-import RecentTransactions from "@/components/home/RecentTransactions";
 import BudgetHealthScore from "@/components/home/BudgetHealthScore";
 import { useTransactionDisplayAmounts } from "@/hooks/transaction/useTransactionDisplayAmounts";
 import { convertCurrency } from "@/utils/currencyConverter";
@@ -43,8 +40,6 @@ export default function Index() {
   const calendar = useCalendar();
   const monthSummary = useTransactionMonthSummary();
   const dispatch = useAppDispatch();
-  const { isLoading: isTransactionsLoading } = useTransactionStatus();
-  const { isLoading: isBudgetsLoading } = useBudgetStatus();
   const { displayTransactions } = useTransactionDisplayAmounts(
     transactions,
     activeCurrency,
@@ -52,12 +47,6 @@ export default function Index() {
   const [convertedExpenseTotal, setConvertedExpenseTotal] = useState(
     Number(monthSummary.totalAmount || 0),
   );
-
-  /** Show skeleton while initial data is loading (both transactions and budgets empty + loading) */
-  const isInitialLoading =
-    (isTransactionsLoading || isBudgetsLoading) &&
-    transactions.length === 0 &&
-    budgets.length === 0;
 
   const [helpOpen, setHelpOpen] = useState(false);
   const [openTxModal, setOpenTxModal] = useState(false);
@@ -269,14 +258,14 @@ export default function Index() {
           onNewBudget={() => setOpenBudgetModal(true)}
         />
 
+        {/* Budget health score gauge (0–100) */}
+        <BudgetHealthScore />
+
         {/* Budget summary cards with progress bars for each category */}
         <BudgetSummary />
 
         {/* Goal summary cards with saved vs target progress */}
         <GoalSummary />
-
-        {/* Budget health score gauge (0–100) */}
-        <BudgetHealthScore />
 
         {/* Extra spacing at bottom to ensure last item isn't cut off */}
         <View style={{ height: 80 }} />
