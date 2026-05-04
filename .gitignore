@@ -32,3 +32,5 @@ Thumbs.db
 
 # Client keys and credentials
 client/keys/
+*.jks
+@jamesattia__budgee-app.jks
