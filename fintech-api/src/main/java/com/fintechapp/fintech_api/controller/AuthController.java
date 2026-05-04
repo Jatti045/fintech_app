@@ -1,5 +1,5 @@
 package com.fintechapp.fintech_api.controller;
-
+import com.fintechapp.fintech_api.dto.auth.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,14 +10,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
-import com.fintechapp.fintech_api.dto.auth.ForgotPasswordRequest;
-import com.fintechapp.fintech_api.dto.auth.LoginRequest;
-import com.fintechapp.fintech_api.dto.auth.LoginResponse;
-import com.fintechapp.fintech_api.dto.auth.ResetPasswordRequest;
-import com.fintechapp.fintech_api.dto.auth.SignupRequest;
 import com.fintechapp.fintech_api.dto.common.ApiMessageResponse;
 import com.fintechapp.fintech_api.dto.user.UserDataResponse;
-import com.fintechapp.fintech_api.dto.auth.AuthenticatedUser;
 import com.fintechapp.fintech_api.service.AuthService;
 import com.fintechapp.fintech_api.service.UserService;
 
@@ -31,6 +25,11 @@ public class AuthController {
 	public AuthController(AuthService authService, UserService userService) {
 		this.authService = authService;
 		this.userService = userService;
+	}
+
+	@PostMapping("/google")
+	public GoogleAuthResponse googleAuth(@RequestBody GoogleAuthRequest request) throws Exception {
+		return authService.googleAuth(request);
 	}
 
 	@PostMapping({ "/register", "/signup" })

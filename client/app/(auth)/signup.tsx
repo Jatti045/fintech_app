@@ -25,6 +25,7 @@ import {
 } from "@/store";
 import Loader from "@/utils/loader";
 import { logger } from "@/utils/logger";
+import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
 
 const { width, height } = Dimensions.get("window");
 const isSmallScreen = width < 380;
@@ -396,6 +397,7 @@ const SignUpScreen = () => {
                   </Link>
                 </Text>
               </View>
+                <GoogleAuthButton />
             </View>
           </View>
         </ScrollView>

@@ -267,6 +267,26 @@ class UserAPI extends BaseAPI {
       return null;
     }
   }
+
+  async googleAuth(idToken: string): Promise<IApiResponse<{user: IUser, token: string}>> {
+    const response =  await this.makeRequest<{user: IUser, token: string}>(
+        '/auth/google',
+        {
+          method: "POST",
+          data: {idToken},
+        }
+    )
+
+    console.log("Google auth: ", response)
+
+    await setAuthToken(response?.data?.token);
+    await AsyncStorage.setItem(
+         USER_DATA_STORAGE_KEY,
+        JSON.stringify(response?.data?.user),
+    );
+
+    return response
+  }
 }
 
 // Export singleton instance

@@ -2,8 +2,18 @@ package com.fintechapp.fintech_api.service;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Locale;
+import java.util.Optional;
 
+import com.fintechapp.fintech_api.dto.auth.*;
+import com.fintechapp.fintech_api.model.AuthProvider;
+import com.google.api.client.auth.openidconnect.IdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,11 +22,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fintechapp.fintech_api.dto.common.ApiMessageResponse;
-import com.fintechapp.fintech_api.dto.auth.LoginData;
-import com.fintechapp.fintech_api.dto.auth.LoginRequest;
-import com.fintechapp.fintech_api.dto.auth.LoginResponse;
-import com.fintechapp.fintech_api.dto.auth.ResetPasswordRequest;
-import com.fintechapp.fintech_api.dto.auth.SignupRequest;
 import com.fintechapp.fintech_api.dto.user.UserDataResponse;
 import com.fintechapp.fintech_api.dto.user.UserSummaryResponse;
 import com.fintechapp.fintech_api.model.PasswordResetToken;
@@ -27,6 +32,9 @@ import com.fintechapp.fintech_api.security.JwtService;
 
 @Service
 public class AuthService {
+
+    @Value("${GOOGLE_WEB_CLIENT_ID}")
+    private String googleClientId;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
@@ -50,6 +58,46 @@ public class AuthService {
         this.jwtService = jwtService;
         this.emailService = emailService;
         this.monthlyIncomeService = monthlyIncomeService;
+    }
+
+    @Transactional
+    public GoogleAuthResponse googleAuth(GoogleAuthRequest request) throws Exception {
+
+        String idToken = request.idToken();
+
+        if (!StringUtils.hasText(idToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                new NetHttpTransport(), new GsonFactory()
+        ).setAudience(Collections.singletonList(googleClientId)).build();
+
+        GoogleIdToken googleToken = verifier.verify(request.idToken());
+
+        if (googleToken == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ID token.");
+        }
+
+        GoogleIdToken.Payload googlePayload = googleToken.getPayload();
+        String email = googlePayload.getEmail();
+
+        Optional<User> existingUser = userRepository.findByEmail(email);
+
+        if (existingUser.isEmpty()) {
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setUsername(googlePayload.get("name").toString());
+            newUser.setPassword(null);
+            newUser.setAuthProvider(AuthProvider.GOOGLE);
+            userRepository.save(newUser);
+        }
+
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User creation failed."));
+
+        String token = jwtService.generateToken(user.getId(), user.getEmail());
+        LoginData data = new LoginData(toUserSummary(user), token);
+        return new GoogleAuthResponse(true, "Login successful.", data);
     }
 
     @Transactional
@@ -137,6 +185,12 @@ public class AuthService {
         String email = normalizeEmail(request.email());
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+
+        AuthProvider authProvider = user.getAuthProvider();
+
+        if (authProvider.equals(AuthProvider.GOOGLE)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password reset not allowed for " + authProvider + " accounts.");
+        }
 
         PasswordResetToken latestToken = passwordResetTokenRepository
                 .findFirstByUser_IdOrderByCreatedAtDesc(user.getId())

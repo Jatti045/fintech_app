@@ -29,6 +29,7 @@ import ForgotPasswordModal from "@/components/login/ForgotPasswordModal";
 import OTPModal from "@/components/login/OTPModal";
 import ResetPasswordModal from "@/components/login/ResetPasswordModal";
 import { logger } from "@/utils/logger";
+import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
 // Removed direct apiClient usage. All authentication flows use userAPI and Redux actions.
 
 const { width, height } = Dimensions.get("window");
@@ -320,6 +321,7 @@ const LoginScreen = () => {
                   </Link>
                 </Text>
               </View>
+                <GoogleAuthButton />
             </View>
           </View>
         </ScrollView>

@@ -212,6 +212,21 @@ export const resetPassword = createAsyncThunk(
   },
 );
 
+export const googleAuth  = createAsyncThunk(
+    "user/googleAuth.ts",
+    async (idToken: string, {rejectWithValue}) => {
+      try {
+        const response =  await userAPI.googleAuth(idToken);
+        console.log("userSlice - googleAuth response", response);
+        return response;
+      } catch(error: unknown) {
+        return rejectWithValue(
+            extractErrorMessage(error, "Failed to load google auth"),
+        )
+      }
+    }
+)
+
 // Create the slice
 const userSlice = createSlice({
   name: "user",
@@ -266,6 +281,28 @@ const userSlice = createSlice({
         state.loginError = action.payload as string;
         state.error = action.payload as string;
       })
+
+        .addCase(googleAuth.pending, (state) => {
+          state.isLoading = true;
+          state.loginError = null;
+          state.error = null;
+        })
+        .addCase(googleAuth.fulfilled, (state, action) => {
+          state.isLoading = false;
+          state.isAuthenticated = true;
+          state.user = action?.payload?.data?.user;
+          state.token = action?.payload?.data?.token;
+          state.loginError = null;
+          state.error = null;
+        })
+        .addCase(googleAuth.rejected, (state, action) => {
+          state.isLoading = false;
+          state.isAuthenticated = false;
+          state.user = null;
+          state.token = null;
+          state.loginError = action.payload as string;
+          state.error = action.payload as string;
+        })
 
       // Signup cases
       .addCase(signupUser.pending, (state) => {
