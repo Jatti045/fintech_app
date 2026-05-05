@@ -33,7 +33,7 @@ import com.fintechapp.fintech_api.security.JwtService;
 @Service
 public class AuthService {
 
-    @Value("${GOOGLE_WEB_CLIENT_ID}")
+    @Value("${GOOGLE_ANDROID_CLIENT_ID}")
     private String googleClientId;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
